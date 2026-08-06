@@ -754,10 +754,10 @@ function Header({ onExport, onSettings }) {
   const { t, lang, setLang } = React.useContext(LangContext);
   return (
     <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14, borderBottom: `2px solid ${C.ink}`, paddingBottom: 10 }}>
-      <div>
-        <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.3 }}>
-          {t('title')}
-          <span style={{ fontFamily: MONO, fontSize: 12, color: C.tealDk, marginLeft: 10, fontWeight: 600 }}>{t('subtitle')}</span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.3, display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "0 10px" }}>
+          <span style={{ whiteSpace: "nowrap" }}>{t('title')}</span>
+          <span style={{ fontFamily: MONO, fontSize: 12, color: C.tealDk, fontWeight: 600, whiteSpace: "nowrap" }}>{t('subtitle')}</span>
         </div>
         <div style={{ fontSize: 12.5, color: C.sub, marginTop: 3 }}>
           {t('desc')}
