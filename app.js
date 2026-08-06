@@ -767,6 +767,7 @@ function App() {
 
           {sel && sel.r.valid && <Detail sc={sc} s={sel.s} r={sel.r} />}
 
+        <AIChat sc={sc} rows={rows} sel={sel} />
           <Footnote />
         </div>
         <Settings open={showSet} onClose={() => setShowSet(false)} />
@@ -841,12 +842,12 @@ function Header({ onExport, onSettings }) {
           <span style={{ whiteSpace: "nowrap" }}>{t('title')}</span>
           {lang === 'zh' && <span style={{ fontFamily: MONO, fontSize: 12, color: C.tealDk, fontWeight: 600, whiteSpace: "nowrap" }}>{t('subtitle')}</span>}
         </div>
-        <div style={{ fontSize: 12.5, color: C.sub, marginTop: 3 }}>
+        <div style={{ fontSize: 12.5, color: C.sub, marginTop: 3 }} className="hide-mobile">
           {t('desc')}
         </div>
       </div>
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ fontFamily: MONO, fontSize: 11, color: C.pass, background: C.passBg, border: `1px solid ${C.pass}33`, borderRadius: 4, padding: "3px 8px" }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }} className="wrap-mobile">
+        <span style={{ fontFamily: MONO, fontSize: 11, color: C.pass, background: C.passBg, border: `1px solid ${C.pass}33`, borderRadius: 4, padding: "3px 8px" }} className="hide-mobile">
           ● {t('badge')}
         </span>
         <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')} style={btn(C.sub, true)}>{t('lang_switch')}</button>
@@ -894,7 +895,7 @@ function ScenarioBar({ sc, set, setSc }) {
   const range = computeRange(sc);
   return (
     <div style={panel}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
         <SectionLabel n="01" t={t("scenario")} s={t("scenario_sub")} />
         <button onClick={() => setShowReq((v) => !v)} style={btn(C.tealDk)}>{t("parse_req")}</button>
       </div>
@@ -921,7 +922,7 @@ function ScenarioBar({ sc, set, setSc }) {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 10 }} className="grid-1-mobile">
         <Group t={t("target_size")}>
           <Field label={t("long_edge")} hint={t("long_hint")}><NumIn v={sc.tgtL} set={set("tgtL")} /></Field>
           <Field label={t("short_edge")} hint={t("short_hint")}><NumIn v={sc.tgtW} set={set("tgtW")} /></Field>
@@ -947,7 +948,7 @@ function ScenarioBar({ sc, set, setSc }) {
         </Group>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, flexWrap: "wrap" }} className="wrap-mobile">
         <span style={{ fontSize: 11.5, color: C.sub }}>
           {t("orientation")}
           <span title="决定目标的长边(如80mm)由传感器哪根轴覆盖。自动=取像素最优；长轴‖长边=相机横装(目标长边落在高分辨率长轴上，通常像素更多)；长轴‖短边=相机转90°竖装(目标长边落在短轴上)。相机能自由转向时选自动即可。" style={{ marginLeft: 4, cursor: "help", color: C.teal, fontSize: 9.5, fontWeight: 700, border: `1px solid ${C.teal}66`, borderRadius: 8, padding: "0 4px" }}>?</span>
@@ -1069,7 +1070,7 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
   };
   return (
     <div style={panel}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
         <SectionLabel n="02" t={t("sensor_bench")} s={t("bench_sub")} />
         <div style={{ display: "flex", gap: 8, position: "relative" }}>
           <button onClick={() => setShowParse((v) => !v)} style={btn(C.tealDk)}>{t("parse_ds")}</button>
@@ -1183,7 +1184,7 @@ function Detail({ sc, s, r }) {
   return (
     <div style={panel}>
       <SectionLabel n="03" t={`${t("detail")} ${s.name}`} s={t("detail_sub")} />
-      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 14, marginTop: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 14, marginTop: 10 }} className="grid-1-mobile">
         {/* 左：读数 */}
         <div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
