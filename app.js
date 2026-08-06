@@ -1,4 +1,3 @@
-/** @jsxRuntime classic */
 const { useState, useMemo } = React;
 
 /* ============================================================
@@ -21,6 +20,307 @@ const C = {
 const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
 const SANS = "'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif";
 
+
+// ==================== 国际化字典 ====================
+const I18N = {
+  zh: {
+    title: "镜头 / 传感器选型计算台",
+    subtitle: "Lens & Sensor Bench",
+    desc: "任意目标 · 任意工作距离 · 多传感器横向对比 · 薄透镜精确式",
+    badge: "计算全程本地 · AI 识别走本地代理（自带 Key）",
+    settings: "⚙ 设置",
+    export_csv: "导出 CSV",
+    scenario: "场景参数",
+    scenario_sub: "客户需求：目标 / 工作距离 / 检测与光学条件 —— 下方所有传感器共用",
+    parse_req: "识别客户需求 / 图纸",
+    parse_title: "从客户图纸 / 需求文档识别 → 自动填场景（所有字段仍可手改）",
+    parse_desc: "从客户图纸 / 需求文档识别 → 自动填场景",
+    upload_btn: "上传图纸 / 需求（PDF·图片）",
+    parsing: "识别中…",
+    parse_fail: "识别失败",
+    retry: "可改用下方粘贴，或重试 / 换清晰截图。",
+    offline_parse: "离线识别并填入",
+    offline_title: "离线文本识别 · 兜底",
+    offline_desc: "想完全离线、或 AI 偶尔不通时用：把含参数的文字粘贴进来（或选 .txt），按规则提取。",
+    clear: "清空",
+    target_size: "目标尺寸 (mm)",
+    long_edge: "长 L",
+    long_hint: "被检测目标的较长边(mm)。工具自动把传感器长轴对准目标长轴，所以长/宽谁大谁小不影响结果。",
+    short_edge: "宽 W",
+    short_hint: "被检测目标的较短边(mm)。",
+    wd: "工作距离 WD (mm)",
+    wd_min: "最小 (覆盖校核基准)",
+    wd_min_hint: "镜头到目标的最近距离。距离越近视场越小，覆盖必须在最近处也成立，所以焦距按它校核。",
+    wd_nom: "标称",
+    wd_nom_hint: "常规工作距离，安装调焦的目标值。目标像素与景深按它计算。",
+    wd_max: "最大",
+    wd_max_hint: "镜头到目标的最远距离。用于景深行程与最远视场。",
+    detection_req: "检测要求",
+    min_feature: "最小特征 (mm，选填)",
+    min_feature_hint: "需要分辨的最小细节，如线宽/缺陷尺寸。一般要 ≥2 个像素才能可靠分辨。留空则不判定。",
+    target_pixels: "目标需求像素 宽×高 (选填)",
+    target_pixels_hint: "希望目标在画面上至少占多少像素。像素越多越能看清细节。留空则不判定。",
+    optical: "光学条件",
+    margin: "覆盖余量 (%)",
+    margin_hint: "在刚好覆盖之外额外留的裕度，用来抵消安装与公差误差。0=不留余量。",
+    wavelength: "波长 (nm)",
+    wavelength_hint: "照明光的颜色波长。绿光≈525，红光≈630，蓝光≈450。影响衍射与镜头选择。",
+    fnum: "景深光圈 F#",
+    fnum_hint: "光圈值。数值越大→光圈越小→景深越深，但进光变少、衍射更明显。",
+    orientation: "安装朝向",
+    orient_auto: "自动（像素最优）",
+    orient_ll: "长轴‖长边（横装）",
+    orient_ls: "长轴‖短边（转90°）",
+    orient_auto_lock: "自动选优",
+    manual_lock: "手动锁定",
+    range_title: "通用选型范围 · 未锁定芯片时的目标区间（阶段一 → 再用下方芯片对比细化）",
+    obj_res: "物方分辨率需",
+    sensor_res: "传感器分辨率需",
+    fl_range: "焦距范围",
+    fmt_header: ["常见靶面", "尺寸 (mm)", "贴合焦距 f*", "达标像素尺寸 ≤"],
+    range_tip: "读法：先看两条硬指标（物方分辨率、传感器分辨率），再按打算用的靶面查焦距。像素尺寸 ≤ 该值才能达到物方分辨率；但像素太小会牺牲进光/信噪比、并更早受衍射限制。定好范围后，用下方「识别 Datasheet」导入候选芯片做精确对比。",
+    sensor_bench: "传感器对比",
+    bench_sub: "点行展开详情 · 双击单元格可编辑 · 支持自定义与库内预设",
+    parse_ds: "识别 Datasheet",
+    custom: "+ 自定义",
+    add_lib: "+ 从库添加 ▾",
+    ai_title: "① AI 智能识别 · 直接读 PDF / 图片",
+    ai_badge: "用你在「设置」里配置的模型（Kimi 等）· 无需装 OCR",
+    ai_desc: "直接上传 datasheet 的 PDF，或规格页截图（PNG/JPG）。AI 会读取并填入。大文件较慢；只截「关键参数 / 规格表」那一页更快更准。",
+    offline_title2: "② 离线文本识别 · 兜底",
+    offline_badge: "无网络 · 100% 可靠",
+    offline_desc2: "想完全离线、或 AI 偶尔不通时用：把含参数的文字粘贴进来（或选 .txt），按规则提取。",
+    table_name: "传感器",
+    table_px: "像元/分辨率",
+    table_fl: "推荐焦距",
+    table_margin: "覆盖余量@最近",
+    table_tpx: "目标像素@标称",
+    table_req: "满足需求",
+    table_samp: "物方分辨率",
+    table_dof: "景深@F#",
+    table_diff: "衍射",
+    table_verdict: "判定",
+    table_action: "",
+    copy: "复制",
+    delete: "✕",
+    table_tip: "提示：覆盖余量按最小工作距离校核（最不利工况）；目标像素按标称工作距离；衍射列为该 F# 下艾里斑直径（>2px 建议开大光圈）。",
+    detail: "详情 ·",
+    detail_sub: "选定传感器的完整读数、光路示意与公式",
+    readout_fl: "推荐 M12 焦距",
+    readout_beta: "放大倍率 β",
+    readout_orient: "当前安装朝向",
+    orient_ll_full: "长轴‖长边（横装）",
+    orient_ls_full: "长轴‖短边（转90°竖装）",
+    cover_fov: "覆盖 · 视场",
+    afov_h: "AFOV 水平",
+    afov_v: "AFOV 垂直",
+    afov_d: "AFOV 对角",
+    margin_long: "长轴余量",
+    margin_short: "短轴余量",
+    pixel_sample: "像素 · 采样",
+    target_px: "目标像素 @标称",
+    utilization: "画幅利用率",
+    obj_res_nom: "物方分辨率 @标称",
+    obj_res_max: "物方分辨率 @最远",
+    dof_diffraction: "景深 · 衍射",
+    dof: "景深",
+    dof_need: "需覆盖行程",
+    airy: "艾里斑",
+    diff_limit: "衍射上限 F#",
+    check_cover: "焦距可覆盖目标",
+    check_req: "目标像素满足需求",
+    check_feat: "最小特征满足 2px 采样",
+    check_dof: "景深覆盖行程",
+    check_aspect: "纵横比不匹配",
+    check_more: "像素不足，但覆盖余量仍偏大",
+    ray_title: "光路示意 · 侧视 · 传感器 → M12 镜头 → 目标面覆盖",
+    ray_tip: "阴影带=工作距离行程；红条=目标长轴；青线=该焦距在近/远距的视场。目标短于近距视场即可全程覆盖。",
+    formula_fl: "焦距 (薄透镜精确)",
+    formula_fov: "物方视场",
+    formula_samp: "物方采样",
+    formula_dof: "景深 (超焦距)",
+    formula_airy: "艾里斑直径",
+    formula_cover: "覆盖校核",
+    footnote_title: "方法说明",
+    footnote_body: "焦距用薄透镜精确式 f = s·WD/(FOV+s)（非低倍率近似）；覆盖性以最小工作距离为最不利工况，取长/短两轴中更严者。景深按对焦于标称 WD、超焦距法估算，弥散圆默认 2×像元。衍射列为选定 F# 下艾里斑直径。本工具为近轴估算，实际选型以镜头 MTF、像圈、CRA 与厂商景深曲线为准；WD 起算基准（前端面/主平面）须与镜头厂统一。全部计算在本地完成，不联网、不调用任何接口。",
+    settings_title: "模型设置",
+    settings_desc: "Key 只存在本机浏览器、经本地代理转发，不写入前端代码、不上传第三方。图片 / PDF 识别需选带 vision 的模型；纯文本粘贴任意模型都行。",
+    provider: "服务商",
+    base_url: "Base URL",
+    model_name: "模型名",
+    api_key: "API Key",
+    current_mode: "当前模式",
+    cancel: "取消",
+    save: "保存",
+    verdict_pass: "通过",
+    verdict_warn: "注意",
+    verdict_fail: "不满足",
+    na: "—",
+    mm: "mm",
+    um: "µm",
+    px: "px",
+    deg: "°",
+    percent: "%",
+    yes: "是",
+    no: "否",
+    lang_switch: "English",
+    lib_tip: "库内为常见典型值，添加后可在表内编辑覆盖",
+    sensor: "Sensor",
+    lens: "M12 · f=",
+    target: "目标",
+    wd_unit: "mm",
+  },
+  en: {
+    title: "Lens / Sensor Selection Bench",
+    subtitle: "Lens & Sensor Bench",
+    desc: "Any target · Any working distance · Multi-sensor comparison · Thin-lens exact",
+    badge: "100% local computation · AI parsing via local proxy (bring your own Key)",
+    settings: "⚙ Settings",
+    export_csv: "Export CSV",
+    scenario: "Scenario Parameters",
+    scenario_sub: "Customer requirements: target / working distance / detection & optical conditions — shared by all sensors below",
+    parse_req: "Parse Customer Request / Drawing",
+    parse_title: "Parse customer drawing / requirement doc → auto-fill scenario (all fields remain editable)",
+    parse_desc: "Parse from customer drawing / requirement document",
+    upload_btn: "Upload Drawing / PDF·Image",
+    parsing: "Parsing...",
+    parse_fail: "Parse failed",
+    retry: "Try text paste below, retry, or use a clearer screenshot.",
+    offline_parse: "Offline Parse & Fill",
+    offline_title: "Offline Text Parsing · Fallback",
+    offline_desc: "For fully offline use or when AI is unavailable: paste text containing parameters (or select .txt) and extract by rule.",
+    clear: "Clear",
+    target_size: "Target Size (mm)",
+    long_edge: "Length L",
+    long_hint: "Longer side of the target (mm). Tool auto-aligns sensor long axis to target long axis, so L/W order does not matter.",
+    short_edge: "Width W",
+    short_hint: "Shorter side of the target (mm).",
+    wd: "Working Distance WD (mm)",
+    wd_min: "Min (Coverage Check)",
+    wd_min_hint: "Closest distance from lens to target. FOV shrinks at close range, so coverage must be verified at minimum WD; focal length is checked against this.",
+    wd_nom: "Nominal",
+    wd_nom_hint: "Standard working distance, the focus adjustment target. Target pixels and DOF are calculated at this WD.",
+    wd_max: "Max",
+    wd_max_hint: "Farthest distance from lens to target. Used for DOF travel and far FOV.",
+    detection_req: "Detection Requirements",
+    min_feature: "Min Feature (mm, optional)",
+    min_feature_hint: "Smallest detail to resolve, e.g. line width / defect size. Typically requires ≥2 pixels for reliable detection. Leave blank to skip.",
+    target_pixels: "Target Pixel Requirement W×H (optional)",
+    target_pixels_hint: "Minimum pixels the target should occupy on the image. More pixels = more detail. Leave blank to skip.",
+    optical: "Optical Conditions",
+    margin: "Coverage Margin (%)",
+    margin_hint: "Extra margin beyond exact coverage to absorb mounting and tolerance errors. 0 = no margin.",
+    wavelength: "Wavelength (nm)",
+    wavelength_hint: "Illumination wavelength. Green ≈525, Red ≈630, Blue ≈450. Affects diffraction and lens selection.",
+    fnum: "DOF Aperture F#",
+    fnum_hint: "Aperture value. Higher → smaller aperture → deeper DOF, but less light and more diffraction.",
+    orientation: "Mount Orientation",
+    orient_auto: "Auto (Pixel Optimal)",
+    orient_ll: "Long‖Long (Landscape)",
+    orient_ls: "Long‖Short (Portrait 90°)",
+    orient_auto_lock: "Auto optimal",
+    manual_lock: "Manual lock",
+    range_title: "General Selection Range · Target range before locking a sensor (Phase 1 → refine with chip comparison below)",
+    obj_res: "Object resolution required",
+    sensor_res: "Sensor resolution required",
+    fl_range: "Focal length range",
+    fmt_header: ["Common Format", "Size (mm)", "Fitting f*", "Max Pixel Size ≤"],
+    range_tip: "How to read: first check the two hard metrics (object resolution, sensor resolution), then look up focal length by intended format. Pixel size ≤ this value to achieve object resolution; but smaller pixels sacrifice light/SNR and hit diffraction limits earlier. After narrowing the range, use Parse Datasheet below to import candidate chips for precise comparison.",
+    sensor_bench: "Sensor Comparison",
+    bench_sub: "Click row for details · Double-click cell to edit · Supports custom and preset library",
+    parse_ds: "Parse Datasheet",
+    custom: "+ Custom",
+    add_lib: "+ From Library ▾",
+    ai_title: "① AI Smart Parse · Direct PDF / Image",
+    ai_badge: "Uses model configured in Settings (Kimi etc.) · No OCR install needed",
+    ai_desc: "Upload datasheet PDF or spec-page screenshot (PNG/JPG). AI reads and fills in. Large files are slow; cropping to the key parameters / spec table page is faster and more accurate.",
+    offline_title2: "② Offline Text Parsing · Fallback",
+    offline_badge: "No network · 100% reliable",
+    offline_desc2: "For fully offline use or when AI is unavailable: paste text containing parameters (or select .txt) and extract by rule.",
+    table_name: "Sensor",
+    table_px: "Pixel / Resolution",
+    table_fl: "Rec. Focal Length",
+    table_margin: "Margin @Min WD",
+    table_tpx: "Target Pixels @Nom",
+    table_req: "Meets Req",
+    table_samp: "Object Resolution",
+    table_dof: "DOF @F#",
+    table_diff: "Diffraction",
+    table_verdict: "Verdict",
+    table_action: "",
+    copy: "Copy",
+    delete: "✕",
+    table_tip: "Tip: Coverage margin is checked at minimum WD (worst case); target pixels are at nominal WD; diffraction column shows Airy disk diameter at selected F# (>2px suggests opening aperture).",
+    detail: "Detail ·",
+    detail_sub: "Full readout, ray diagram & formulas for selected sensor",
+    readout_fl: "Rec. M12 Focal Length",
+    readout_beta: "Magnification β",
+    readout_orient: "Current Orientation",
+    orient_ll_full: "Long‖Long (Landscape)",
+    orient_ls_full: "Long‖Short (Portrait 90°)",
+    cover_fov: "Coverage · FOV",
+    afov_h: "AFOV H",
+    afov_v: "AFOV V",
+    afov_d: "AFOV D",
+    margin_long: "Long-axis Margin",
+    margin_short: "Short-axis Margin",
+    pixel_sample: "Pixel · Sampling",
+    target_px: "Target Pixels @Nom",
+    utilization: "Frame Utilization",
+    obj_res_nom: "Object Resolution @Nom",
+    obj_res_max: "Object Resolution @Max",
+    dof_diffraction: "DOF · Diffraction",
+    dof: "DOF",
+    dof_need: "Required Travel",
+    airy: "Airy Disk",
+    diff_limit: "Diffraction Limit F#",
+    check_cover: "Focal length covers target",
+    check_req: "Target pixels meet requirement",
+    check_feat: "Min feature meets 2px sampling",
+    check_dof: "DOF covers travel",
+    check_aspect: "Aspect ratio mismatch",
+    check_more: "Pixels insufficient but margin still large",
+    ray_title: "Ray Diagram · Side View · Sensor → M12 Lens → Target Coverage",
+    ray_tip: "Shaded band = working distance travel; Red bar = target long axis; Cyan lines = FOV at near/far WD. Target shorter than near FOV ensures full-range coverage.",
+    formula_fl: "Focal Length (Thin Lens Exact)",
+    formula_fov: "Object FOV",
+    formula_samp: "Object Sampling",
+    formula_dof: "DOF (Hyperfocal)",
+    formula_airy: "Airy Disk Diameter",
+    formula_cover: "Coverage Check",
+    footnote_title: "Method Notes",
+    footnote_body: "Focal length uses thin-lens exact formula f = s·WD/(FOV+s) (not low-magnification approximation). Coverage is checked at minimum WD as worst case, taking the stricter of long/short axes. DOF is estimated by hyperfocal method focused at nominal WD, with circle of confusion defaulting to 2×pixel. Diffraction column shows Airy disk diameter at selected F#. This tool is a paraxial estimate; actual selection should refer to lens MTF, image circle, CRA and manufacturer DOF curves. WD measurement reference (front vertex / principal plane) must be aligned with lens vendor. All computation is local, no network, no external API calls.",
+    settings_title: "Model Settings",
+    settings_desc: "Key is stored only in local browser, forwarded via local proxy, not written into frontend code or uploaded to third parties. Image / PDF parsing requires a vision-capable model; plain text parsing works with any model.",
+    provider: "Provider",
+    base_url: "Base URL",
+    model_name: "Model Name",
+    api_key: "API Key",
+    current_mode: "Current Mode",
+    cancel: "Cancel",
+    save: "Save",
+    verdict_pass: "Pass",
+    verdict_warn: "Warning",
+    verdict_fail: "Fail",
+    na: "—",
+    mm: "mm",
+    um: "µm",
+    px: "px",
+    deg: "°",
+    percent: "%",
+    yes: "Yes",
+    no: "No",
+    lang_switch: "中文",
+    lib_tip: "Library contains common typical values; editable after adding",
+    sensor: "Sensor",
+    lens: "M12 · f=",
+    target: "Target",
+    wd_unit: "mm",
+  }
+};
+
+const LangContext = React.createContext({ lang: 'zh', t: (k) => k, setLang: () => {} });
+// ==================== /国际化字典 ====================
 // 标准 M12 定焦焦距梯度 (mm)
 const STD_M12 = [1.8, 2.1, 2.5, 2.8, 3.0, 3.6, 4, 4.3, 4.5, 5, 5.5, 6, 8, 10, 12, 16, 25];
 
@@ -36,7 +336,7 @@ const PROVIDERS = {
 function getCfg() { try { return JSON.parse(localStorage.getItem(CFG_KEY) || "{}"); } catch (e) { return {}; } }
 function saveCfg(c) { try { localStorage.setItem(CFG_KEY, JSON.stringify(c)); } catch (e) {} }
 async function pdfToImages(file, maxPages = 3) {
-  if (typeof pdfjsLib === "undefined") throw new Error("PDF 组件未加载，请改传图片");
+  if (typeof pdfjsLib === "undefined") throw new Error("PDF component not loaded, please upload image instead");
   const buf = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
   const out = [], n = Math.min(pdf.numPages, maxPages);
@@ -51,19 +351,19 @@ async function pdfToImages(file, maxPages = 3) {
 }
 async function fileToImages(file) {
   if (/pdf/i.test(file.type) || /\.pdf$/i.test(file.name)) return pdfToImages(file);
-  const dataUrl = await new Promise((res, rej) => { const rd = new FileReader(); rd.onload = () => res(String(rd.result || "")); rd.onerror = () => rej(new Error("读取文件失败")); rd.readAsDataURL(file); });
+  const dataUrl = await new Promise((res, rej) => { const rd = new FileReader(); rd.onload = () => res(String(rd.result || "")); rd.onerror = () => rej(new Error("File read failed")); rd.readAsDataURL(file); });
   return [{ media_type: file.type || "image/png", data: dataUrl.split(",")[1] || "" }];
 }
 async function callLLM(instruction, files) {
   const cfg = getCfg();
-  if (!cfg.apiKey) throw new Error("未配置 API Key —— 点右上角「设置」填入模型与 Key");
+  if (!cfg.apiKey) throw new Error("API Key not configured —— click Settings (top right) to enter model and Key");
   let images = [];
   for (const f of (files || [])) images = images.concat(await fileToImages(f));
   let resp;
   try {
     resp = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: cfg.provider || "openai", baseUrl: cfg.baseUrl || "", model: cfg.model || "", apiKey: cfg.apiKey, instruction, images }) });
-  } catch (e) { throw new Error("连不上本地代理——确认已运行 node server.js 并从 http://localhost 打开"); }
-  let data; try { data = await resp.json(); } catch (e) { throw new Error("代理返回异常"); }
+  } catch (e) { throw new Error("Cannot connect to local proxy —— confirm server.js is running and opened via http://localhost"); }
+  let data; try { data = await resp.json(); } catch (e) { throw new Error("Proxy returned abnormal response"); }
   if (!resp.ok) throw new Error(data && data.error ? data.error : ("HTTP " + resp.status));
   return (data && data.text) || "";
 }
@@ -222,7 +522,7 @@ function parseDatasheet(text) {
     || t.match(/([\d.]+)\s*[µuμ]m\s*[x×*]\s*[\d.]+\s*[µuμ]m/i)
     || t.match(/([\d.]+)\s*[µuμ]m\s*(?:pixel|像元|像素)/i);
   if (m) found.px = parseFloat(m[1]);
-  // 分辨率：收集所有 A×B，优先关键词邻近，否则取面积最大
+  // Resolution: collect all A×B, prefer keyword proximity, else max area
   const res = [];
   const re = /(\d{3,5})\s*H?\s*[x×*]\s*(\d{3,5})\s*V?/gi;
   let r;
@@ -241,12 +541,12 @@ function parseDatasheet(text) {
   m = t.match(/1\s*\/\s*([\d.]+)\s*(?:"|″|”|inch|inches|英寸)/i);
   if (m) found.fmt = '1/' + m[1] + '"';
   // 快门
-  if (/global\s*shutter|全局快门|全局|global/i.test(t)) found.shutter = "全局";
-  else if (/rolling\s*shutter|卷帘快门|卷帘|rolling/i.test(t)) found.shutter = "卷帘";
+  if (/global\s*shutter|全局快门|全局|global/i.test(t)) found.shutter = "Global";
+  else if (/rolling\s*shutter|卷帘快门|卷帘|rolling/i.test(t)) found.shutter = "Rolling";
   // 黑白/彩色
   const mono = /mono(chrome)?|黑白|b\s*&\s*w|b\/w/i.test(t);
   const color = /\bcolor\b|彩色|bayer/i.test(t);
-  found.mono = mono && color ? "黑白/彩色" : mono ? "黑白" : color ? "彩色" : "";
+  found.mono = mono && color ? "Mono/Color" : mono ? "Mono" : color ? "Color" : "";
   // 接口
   const ifc = [];
   if (/MIPI/i.test(t)) { const l = t.match(/(\d)\s*-?\s*lane/i); ifc.push("MIPI" + (l ? " " + l[1] + "-lane" : "")); }
@@ -314,6 +614,8 @@ function parseReq(text) {
 
 // ==================================================================
 function App() {
+  const [lang, setLang] = useState('zh');
+  const t = useMemo(() => (key) => I18N[lang][key] || key, [lang]);
   const [sc, setSc] = useState({
     tgtL: 80, tgtW: 70, wdMin: 142, wdNom: 152, wdMax: 162,
     margin: 0, feat: 0.2, reqW: 1000, reqH: 1000,
@@ -338,48 +640,51 @@ function App() {
   const editSensor = (id, k, v) => setSensors((p) => p.map((x) => x.id === id ? { ...x, [k]: v } : x));
 
   const exportCSV = () => {
-    const head = ["传感器", "厂商", "像元µm", "分辨率", "推荐焦距mm", "覆盖余量", "目标像素", "满足需求", "物方µm/px", "景深mm", "衍射@F#", "判定"];
+    const head = ["Sensor", "Vendor", "Pixelµm", "Resolution", "Rec.FLmm", "Margin", "TargetPx", "MeetsReq", "Objµm/px", "DOFmm", "Diff@F#", "Verdict"];
     const lines = [head.map(csv).join(",")];
     rows.forEach(({ s, r }) => {
       if (!r.valid) return;
       lines.push([
         s.name, s.vendor, s.px, `${s.resW}x${s.resH}`, r.fRec,
         pct(r.worstMargin), `${f0(r.tpxLong)}x${f0(r.tpxShort)}`,
-        r.resReqOK == null ? "—" : r.resReqOK ? "是" : "否",
+        r.resReqOK == null ? "—" : r.resReqOK ? "Yes" : "No",
         f1(r.sampNom), r.dofTotal === Infinity ? "∞" : f0(r.dofTotal),
-        `${r.airyPx.toFixed(1)}px`, { pass: "通过", warn: "注意", fail: "不满足" }[r.verdict],
+        `${r.airyPx.toFixed(1)}px`, { pass: "Pass", warn: "Warning", fail: "Fail" }[r.verdict],
       ].map(csv).join(","));
     });
     const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob); const a = document.createElement("a");
-    a.href = url; a.download = "镜头选型对比.csv"; a.click(); URL.revokeObjectURL(url);
+    a.href = url; a.download = "lens_sensor_comparison.csv"; a.click(); URL.revokeObjectURL(url);
   };
 
   const [showSet, setShowSet] = useState(false);
 
   return (
-    <div style={{ background: C.paper, minHeight: "100%", fontFamily: SANS, color: C.ink, padding: 16 }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <Header onExport={exportCSV} onSettings={() => setShowSet(true)} />
+    <LangContext.Provider value={{ lang, t, setLang }}>
+      <div style={{ background: C.paper, minHeight: "100%", fontFamily: SANS, color: C.ink, padding: 16 }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <Header onExport={exportCSV} onSettings={() => setShowSet(true)} />
 
-        <ScenarioBar sc={sc} set={set} setSc={setSc} />
+          <ScenarioBar sc={sc} set={set} setSc={setSc} />
 
-        <SensorBench
-          rows={rows} selId={selId} setSelId={setSelId}
-          add={addSensor} dup={dupSensor} rm={rmSensor} edit={editSensor}
-        />
+          <SensorBench
+            rows={rows} selId={selId} setSelId={setSelId}
+            add={addSensor} dup={dupSensor} rm={rmSensor} edit={editSensor}
+          />
 
-        {sel && sel.r.valid && <Detail sc={sc} s={sel.s} r={sel.r} />}
+          {sel && sel.r.valid && <Detail sc={sc} s={sel.s} r={sel.r} />}
 
-        <Footnote />
+          <Footnote />
+        </div>
+        <Settings open={showSet} onClose={() => setShowSet(false)} />
       </div>
-      <Settings open={showSet} onClose={() => setShowSet(false)} />
-    </div>
+    </LangContext.Provider>
   );
 }
 
 // ---------------- 模型设置弹窗 ----------------
 function Settings({ open, onClose }) {
+  const { t } = React.useContext(LangContext);
   const [c, setC] = useState(() => {
     const g = getCfg();
     return { preset: g.preset || "kimi", provider: g.provider || "openai", baseUrl: g.baseUrl || PROVIDERS.kimi.baseUrl, model: g.model || PROVIDERS.kimi.model, apiKey: g.apiKey || "" };
@@ -389,20 +694,20 @@ function Settings({ open, onClose }) {
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 8, padding: 18, width: 460, maxWidth: "92vw", boxShadow: "0 12px 40px rgba(0,0,0,.25)" }}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: C.ink, marginBottom: 4 }}>模型设置</div>
-        <div style={{ fontSize: 11.5, color: C.sub, marginBottom: 12, lineHeight: 1.5 }}>Key 只存在本机浏览器、经本地代理转发，不写入前端代码、不上传第三方。图片 / PDF 识别需选<b>带 vision 的模型</b>；纯文本粘贴任意模型都行。</div>
-        <SetRow label="服务商">
+        <div style={{ fontSize: 16, fontWeight: 800, color: C.ink, marginBottom: 4 }}>{t("settings_title")}</div>
+        <div style={{ fontSize: 11.5, color: C.sub, marginBottom: 12, lineHeight: 1.5 }}>{t("settings_desc")}</div>
+        <SetRow label={t("provider")}>
           <select value={c.preset} onChange={(e) => pickPreset(e.target.value)} style={setInp}>
             {Object.keys(PROVIDERS).map((k) => <option key={k} value={k}>{PROVIDERS[k].label}</option>)}
           </select>
         </SetRow>
-        <SetRow label="Base URL"><input value={c.baseUrl} onChange={(e) => setC((s) => ({ ...s, baseUrl: e.target.value }))} style={setInp} placeholder="https://api.moonshot.cn/v1" /></SetRow>
-        <SetRow label="模型名"><input value={c.model} onChange={(e) => setC((s) => ({ ...s, model: e.target.value }))} style={setInp} placeholder="moonshot-v1-8k-vision-preview" /></SetRow>
-        <SetRow label="API Key"><input type="password" value={c.apiKey} onChange={(e) => setC((s) => ({ ...s, apiKey: e.target.value }))} style={setInp} placeholder="sk-..." /></SetRow>
-        <div style={{ fontSize: 11, color: C.sub, marginTop: 6 }}>当前模式：{c.provider === "anthropic" ? "Anthropic 协议" : "OpenAI 兼容协议"}</div>
+        <SetRow label={t("base_url")}><input value={c.baseUrl} onChange={(e) => setC((s) => ({ ...s, baseUrl: e.target.value }))} style={setInp} placeholder="https://api.moonshot.cn/v1" /></SetRow>
+        <SetRow label={t("model_name")}><input value={c.model} onChange={(e) => setC((s) => ({ ...s, model: e.target.value }))} style={setInp} placeholder="moonshot-v1-8k-vision-preview" /></SetRow>
+        <SetRow label={t("api_key")}><input type="password" value={c.apiKey} onChange={(e) => setC((s) => ({ ...s, apiKey: e.target.value }))} style={setInp} placeholder="sk-..." /></SetRow>
+        <div style={{ fontSize: 11, color: C.sub, marginTop: 6 }}>{t("current_mode")}: {c.provider === "anthropic" ? "Anthropic Protocol" : "OpenAI Compatible Protocol"}</div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 14 }}>
-          <button onClick={onClose} style={btn(C.sub, true)}>取消</button>
-          <button onClick={() => { saveCfg(c); onClose(); }} style={btn(C.teal)}>保存</button>
+          <button onClick={onClose} style={btn(C.sub, true)}>{t("cancel")}</button>
+          <button onClick={() => { saveCfg(c); onClose(); }} style={btn(C.teal)}>{t("save")}</button>
         </div>
       </div>
     </div>
@@ -415,23 +720,25 @@ const setInp = { width: "100%", boxSizing: "border-box", fontSize: 13, padding: 
 
 // ---------------- Header ----------------
 function Header({ onExport, onSettings }) {
+  const { t, lang, setLang } = React.useContext(LangContext);
   return (
     <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14, borderBottom: `2px solid ${C.ink}`, paddingBottom: 10 }}>
       <div>
         <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.3 }}>
-          镜头 / 传感器选型计算台
-          <span style={{ fontFamily: MONO, fontSize: 12, color: C.tealDk, marginLeft: 10, fontWeight: 600 }}>Lens & Sensor Bench</span>
+          {t('title')}
+          <span style={{ fontFamily: MONO, fontSize: 12, color: C.tealDk, marginLeft: 10, fontWeight: 600 }}>{t('subtitle')}</span>
         </div>
         <div style={{ fontSize: 12.5, color: C.sub, marginTop: 3 }}>
-          任意目标 · 任意工作距离 · 多传感器横向对比 · 薄透镜精确式
+          {t('desc')}
         </div>
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <span style={{ fontFamily: MONO, fontSize: 11, color: C.pass, background: C.passBg, border: `1px solid ${C.pass}33`, borderRadius: 4, padding: "3px 8px" }}>
-          ● 计算全程本地 · AI 识别走本地代理（自带 Key）
+          ● {t('badge')}
         </span>
-        <button onClick={onSettings} style={btn(C.tealDk)}>⚙ 设置</button>
-        <button onClick={onExport} style={btn(C.teal)}>导出 CSV</button>
+        <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')} style={btn(C.sub, true)}>{t('lang_switch')}</button>
+        <button onClick={onSettings} style={btn(C.tealDk)}>{t('settings')}</button>
+        <button onClick={onExport} style={btn(C.teal)}>{t('export_csv')}</button>
       </div>
     </div>
   );
@@ -439,6 +746,7 @@ function Header({ onExport, onSettings }) {
 
 // ---------------- 场景参数 ----------------
 function ScenarioBar({ sc, set, setSc }) {
+  const { t } = React.useContext(LangContext);
   const [showReq, setShowReq] = useState(false);
   const [rtext, setRtext] = useState("");
   const [rbusy, setRbusy] = useState(false);
@@ -450,88 +758,88 @@ function ScenarioBar({ sc, set, setSc }) {
     keys.forEach((k) => { if (o[k] != null && o[k] !== "" && isFinite(+o[k])) patch[k] = +o[k]; });
     if (Object.keys(patch).length) setSc((p) => ({ ...p, ...patch }));
     const parts = [];
-    if (patch.tgtL || patch.tgtW) parts.push("目标 " + (patch.tgtL ?? sc.tgtL) + "×" + (patch.tgtW ?? sc.tgtW));
+    if (patch.tgtL || patch.tgtW) parts.push("Target " + (patch.tgtL ?? sc.tgtL) + "×" + (patch.tgtW ?? sc.tgtW));
     if (patch.wdMin) parts.push("WD " + patch.wdMin + "–" + (patch.wdMax ?? "?"));
     if (patch.lambda) parts.push(patch.lambda + "nm");
-    if (patch.reqW) parts.push("需求 " + patch.reqW + "×" + patch.reqH);
-    setRmsg((label || "已识别") + "并填入场景：" + (parts.join(" · ") || "（部分字段）") + (o.notes ? " · 备注：" + o.notes : "") + " —— 请核对");
+    if (patch.reqW) parts.push("Req " + patch.reqW + "×" + patch.reqH);
+    setRmsg((label || "Parsed") + " → filled scenario: " + (parts.join(" · ") || "(partial fields)") + (o.notes ? " · Notes: " + o.notes : "") + " —— Please verify");
   };
   const aiExtractReq = async (file) => {
     setRerr(""); setRmsg(""); setRbusy(true);
     try {
-      const prompt = `这是一份机器视觉相机的需求文档或客户图纸。提取选型参数，只返回一个 JSON 对象，不要解释、不要 Markdown。字段：tgtL(目标较长边mm), tgtW(较短边mm), wdMin, wdNom, wdMax(工作距离mm；若给的是范围则填最小和最大，标称取中值；注意 cm→mm 换算，如 14.2cm=142), lambda(照明波长nm), reqW, reqH(目标需求像素；若写 down to 1000x1000 则填 1000,1000), feat(需分辨的最小特征mm，没有填null), notes(快门/接口/黑白/IR滤光片/帧率等其它要求，中文字符串)。找不到的字段填 null。`;
+      const prompt = `This is a machine vision camera requirement document or customer drawing. Extract selection parameters, return only a JSON object, no explanation, no Markdown. Fields: tgtL(target longer side mm), tgtW(shorter side mm), wdMin, wdNom, wdMax(working distance mm; if range given fill min and max, nominal is midpoint; note cm→mm conversion e.g. 14.2cm=142), lambda(illumination wavelength nm), reqW, reqH(target pixel requirement; if says down to 1000x1000 then fill 1000,1000), feat(minimum resolvable feature mm, null if not found), notes(shutter/interface/mono/IR filter/fps etc., string). Fill null for missing fields.`;
       const txt = await callLLM(prompt, [file]);
       const j = JSON.parse(txt.replace(/```json/gi, "").replace(/```/g, "").trim());
       applyFound(j, "AI 已识别");
-    } catch (e) { setRerr("识别失败（" + ((e && e.message) || "未知") + "）。可改用下方粘贴，或重试 / 换清晰截图。"); }
+    } catch (e) { setRerr("Parse failed (" + ((e && e.message) || "unknown") + "). Try text paste below, retry, or use a clearer screenshot."); }
     finally { setRbusy(false); }
   };
   const runReqParse = (text) => {
-    if (!text || !text.trim()) { setRmsg("请先粘贴需求文本。"); return; }
+    if (!text || !text.trim()) { setRmsg(t("parse_req") + ": paste text first."); return; }
     applyFound(parseReq(text), "已识别");
   };
   const range = computeRange(sc);
   return (
     <div style={panel}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <SectionLabel n="01" t="场景参数" s="客户需求：目标 / 工作距离 / 检测与光学条件 —— 下方所有传感器共用" />
-        <button onClick={() => setShowReq((v) => !v)} style={btn(C.tealDk)}>识别客户需求 / 图纸</button>
+        <SectionLabel n="01" t={t("scenario")} s={t("scenario_sub")} />
+        <button onClick={() => setShowReq((v) => !v)} style={btn(C.tealDk)}>{t("parse_req")}</button>
       </div>
 
       {showReq && (
         <div style={{ border: `1px dashed ${C.tealDk}`, borderRadius: 6, background: C.paper, padding: 10, marginTop: 10 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: C.tealDk, marginBottom: 6 }}>从客户图纸 / 需求文档识别 → 自动填场景（所有字段仍可手改）</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: C.tealDk, marginBottom: 6 }}>{t("parse_title")}</div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
             <label style={{ ...btn(C.teal), display: "inline-block", opacity: rbusy ? 0.55 : 1, pointerEvents: rbusy ? "none" : "auto" }}>
-              {rbusy ? "识别中…" : "上传图纸 / 需求（PDF·图片）"}
+              {rbusy ? t("parsing") : t("upload_btn")}
               <input type="file" accept=".pdf,image/*" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) aiExtractReq(f); }} style={{ display: "none" }} />
             </label>
-            {rbusy && <span style={{ fontSize: 11.5, color: C.tealDk }}>正在读取并解析…</span>}
-            {rerr && <span style={{ fontSize: 11.5, color: C.fail, flex: 1 }}>{rerr}</span>}
+            {rbusy && <span style={{ fontSize: 11.5, color: C.tealDk }}>{t("parsing")}</span>}
+            {rerr && <span style={{ fontSize: 11.5, color: C.fail, flex: 1 }}>{t("parse_fail")} ({rerr}) · {t("retry")}</span>}
           </div>
           <textarea value={rtext} onChange={(e) => setRtext(e.target.value)}
             placeholder={'或粘贴需求文字，例：目标 70mm x 80mm；工作距离 14.2cm to 16.2cm；525nm；接受 down to 1000x1000；黑白 MIPI 24fps IR-cut'}
             style={{ width: "100%", minHeight: 54, boxSizing: "border-box", fontFamily: MONO, fontSize: 12, padding: 8, border: `1px solid ${C.lineHard}`, borderRadius: 5, resize: "vertical", color: C.ink }} />
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
-            <button onClick={() => runReqParse(rtext)} style={btn(C.tealDk)}>离线识别并填入</button>
-            <button onClick={() => { setRtext(""); setRmsg(""); setRerr(""); }} style={btn(C.sub, true)}>清空</button>
+            <button onClick={() => runReqParse(rtext)} style={btn(C.tealDk)}>{t("offline_parse")}</button>
+            <button onClick={() => { setRtext(""); setRmsg(""); setRerr(""); }} style={btn(C.sub, true)}>{t("clear")}</button>
             {rmsg && <span style={{ fontSize: 11.5, color: C.tealDk, flex: 1 }}>{rmsg}</span>}
           </div>
         </div>
       )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 10 }}>
-        <Group t="目标尺寸 (mm)">
-          <Field label="长 L" hint="被检测目标的较长边(mm)。工具自动把传感器长轴对准目标长轴，所以长/宽谁大谁小不影响结果。"><NumIn v={sc.tgtL} set={set("tgtL")} /></Field>
-          <Field label="宽 W" hint="被检测目标的较短边(mm)。"><NumIn v={sc.tgtW} set={set("tgtW")} /></Field>
+        <Group t={t("target_size")}>
+          <Field label={t("long_edge")} hint={t("long_hint")}><NumIn v={sc.tgtL} set={set("tgtL")} /></Field>
+          <Field label={t("short_edge")} hint={t("short_hint")}><NumIn v={sc.tgtW} set={set("tgtW")} /></Field>
         </Group>
-        <Group t="工作距离 WD (mm)">
-          <Field label="最小 (覆盖校核基准)" hint="镜头到目标的最近距离。距离越近视场越小，覆盖必须在最近处也成立，所以焦距按它校核。"><NumIn v={sc.wdMin} set={set("wdMin")} /></Field>
-          <Field label="标称" hint="常规工作距离，安装调焦的目标值。目标像素与景深按它计算。"><NumIn v={sc.wdNom} set={set("wdNom")} /></Field>
-          <Field label="最大" hint="镜头到目标的最远距离。用于景深行程与最远视场。"><NumIn v={sc.wdMax} set={set("wdMax")} /></Field>
+        <Group t={t("wd")}>
+          <Field label={t("wd_min")} hint={t("wd_min_hint")}><NumIn v={sc.wdMin} set={set("wdMin")} /></Field>
+          <Field label={t("wd_nom")} hint={t("wd_nom_hint")}><NumIn v={sc.wdNom} set={set("wdNom")} /></Field>
+          <Field label={t("wd_max")} hint={t("wd_max_hint")}><NumIn v={sc.wdMax} set={set("wdMax")} /></Field>
         </Group>
-        <Group t="检测要求">
-          <Field label="最小特征 (mm，选填)" hint="需要分辨的最小细节，如线宽/缺陷尺寸。一般要 ≥2 个像素才能可靠分辨。留空则不判定。"><NumIn v={sc.feat} set={set("feat")} /></Field>
-          <Field label="目标需求像素 宽×高 (选填)" hint="希望目标在画面上至少占多少像素。像素越多越能看清细节。留空则不判定。">
+        <Group t={t("detection_req")}>
+          <Field label={t("min_feature")} hint={t("min_feature_hint")}><NumIn v={sc.feat} set={set("feat")} /></Field>
+          <Field label={t("target_pixels")} hint={t("target_pixels_hint")}>
             <div style={{ display: "flex", gap: 6 }}>
               <NumIn v={sc.reqW} set={set("reqW")} />
               <NumIn v={sc.reqH} set={set("reqH")} />
             </div>
           </Field>
         </Group>
-        <Group t="光学条件">
-          <Field label="覆盖余量 (%)" hint="在刚好覆盖之外额外留的裕度，用来抵消安装与公差误差。0=不留余量。"><NumIn v={sc.margin} set={set("margin")} /></Field>
-          <Field label="波长 (nm)" hint="照明光的颜色波长。绿光≈525，红光≈630，蓝光≈450。影响衍射与镜头选择。"><NumIn v={sc.lambda} set={set("lambda")} /></Field>
-          <Field label="景深光圈 F#" hint="光圈值。数值越大→光圈越小→景深越深，但进光变少、衍射更明显。"><NumIn v={sc.fnum} set={set("fnum")} /></Field>
+        <Group t={t("optical")}>
+          <Field label={t("margin")} hint={t("margin_hint")}><NumIn v={sc.margin} set={set("margin")} /></Field>
+          <Field label={t("wavelength")} hint={t("wavelength_hint")}><NumIn v={sc.lambda} set={set("lambda")} /></Field>
+          <Field label={t("fnum")} hint={t("fnum_hint")}><NumIn v={sc.fnum} set={set("fnum")} /></Field>
         </Group>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
         <span style={{ fontSize: 11.5, color: C.sub }}>
-          安装朝向
+          {t("orientation")}
           <span title="决定目标的长边(如80mm)由传感器哪根轴覆盖。自动=取像素最优；长轴‖长边=相机横装(目标长边落在高分辨率长轴上，通常像素更多)；长轴‖短边=相机转90°竖装(目标长边落在短轴上)。相机能自由转向时选自动即可。" style={{ marginLeft: 4, cursor: "help", color: C.teal, fontSize: 9.5, fontWeight: 700, border: `1px solid ${C.teal}66`, borderRadius: 8, padding: "0 4px" }}>?</span>
         </span>
-        {[["auto", "自动（像素最优）"], ["LL", "长轴‖长边（横装）"], ["LS", "长轴‖短边（转90°）"]].map(([v, lb]) => {
+        {[["auto", t("orient_auto")], ["LL", t("orient_ll")], ["LS", t("orient_ls")]].map(([v, lb]) => {
           const on = (sc.orient || "auto") === v;
           return (
             <button key={v} onClick={() => set("orient")(v)}
@@ -549,18 +857,19 @@ function ScenarioBar({ sc, set, setSc }) {
 
 // ---------------- 通用选型范围展示 ----------------
 function RangeBox({ range: r }) {
+  const { t } = React.useContext(LangContext);
   return (
     <div style={{ border: `1px solid ${C.teal}`, background: "#F1F7F8", borderRadius: 6, padding: 10, marginTop: 10 }}>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: C.tealDk, marginBottom: 6 }}>通用选型范围 · 未锁定芯片时的目标区间（阶段一 → 再用下方芯片对比细化）</div>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: C.tealDk, marginBottom: 6 }}>{t("range_title")}</div>
       <div style={{ display: "flex", gap: 18, flexWrap: "wrap", fontSize: 12.5, marginBottom: 8 }}>
-        <span>物方分辨率需 <b style={{ fontFamily: MONO, color: C.ink }}>≤ {r.objRes ? f1(r.objRes) + " µm/px" : "—（填需求像素/最小特征）"}</b></span>
-        <span>传感器分辨率需 <b style={{ fontFamily: MONO, color: C.ink }}>≥ {r.sResLong ? r.sResLong + "×" + r.sResShort : "—"}{r.mp ? " (≈" + r.mp.toFixed(1) + "MP)" : ""}</b></span>
-        <span>焦距范围 <b style={{ fontFamily: MONO, color: C.ink }}>≈ {f1(r.fMin)}–{f1(r.fMax)} mm</b></span>
+        <span>{t("obj_res")} <b style={{ fontFamily: MONO, color: C.ink }}>≤ {r.objRes ? f1(r.objRes) + " µm/px" : "—"}</b></span>
+        <span>{t("sensor_res")} <b style={{ fontFamily: MONO, color: C.ink }}>≥ {r.sResLong ? r.sResLong + "×" + r.sResShort : "—"}{r.mp ? " (≈" + r.mp.toFixed(1) + "MP)" : ""}</b></span>
+        <span>{t("fl_range")} <b style={{ fontFamily: MONO, color: C.ink }}>≈ {f1(r.fMin)}–{f1(r.fMax)} mm</b></span>
       </div>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.5 }}>
         <thead>
           <tr style={{ color: C.sub, fontFamily: MONO }}>
-            {[["常见靶面", "left"], ["尺寸 (mm)", "center"], ["贴合焦距 f*", "center"], ["达标像素尺寸 ≤", "center"]].map(([h, a], i) => (
+            {[[t("fmt_header")[0], "left"], [t("fmt_header")[1], "center"], [t("fmt_header")[2], "center"], [t("fmt_header")[3], "center"]].map(([h, a], i) => (
               <th key={i} style={{ textAlign: a, padding: "3px 6px", borderBottom: `1px solid ${C.line}`, fontWeight: 600 }}>{h}</th>
             ))}
           </tr>
@@ -576,15 +885,14 @@ function RangeBox({ range: r }) {
           ))}
         </tbody>
       </table>
-      <div style={{ fontSize: 10.5, color: C.sub, marginTop: 6 }}>
-        读法：先看两条硬指标（物方分辨率、传感器分辨率），再按打算用的靶面查焦距。像素尺寸 ≤ 该值才能达到物方分辨率；但像素太小会牺牲进光/信噪比、并更早受衍射限制。定好范围后，用下方「识别 Datasheet」导入候选芯片做精确对比。
-      </div>
+      <div style={{ fontSize: 10.5, color: C.sub, marginTop: 6 }}>{t("range_tip")}</div>
     </div>
   );
 }
 
 // ---------------- 传感器对比台 ----------------
 function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
+  const { t } = React.useContext(LangContext);
   const [showLib, setShowLib] = useState(false);
   const [showParse, setShowParse] = useState(false);
   const [ptext, setPtext] = useState("");
@@ -592,7 +900,7 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
   const [aiBusy, setAiBusy] = useState(false);
   const [aiErr, setAiErr] = useState("");
   const runParse = (text) => {
-    if (!text || !text.trim()) { setPmsg("请先粘贴 datasheet 文本，或选择 .txt 文件。"); return; }
+    if (!text || !text.trim()) { setPmsg("Paste datasheet text or select .txt file first."); return; }
     const p = parseDatasheet(text);
     const f = p.found;
     add({
@@ -623,7 +931,7 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
   const aiExtract = async (file) => {
     setAiErr(""); setPmsg(""); setAiBusy(true);
     try {
-      const prompt = `阅读这份图像传感器 datasheet，提取参数，只返回一个 JSON 对象，不要解释、不要 Markdown 代码块。字段：name(型号), vendor(厂商), px(像素尺寸,单位µm,纯数值), resW(有效像素宽,整数), resH(有效像素高,整数), fmt(光学格式,如 1/4"), shutter(值只能是 全局 或 卷帘), mono(值只能是 黑白 或 彩色 或 黑白/彩色), interface(接口,如 MIPI 1-lane), fps(最大帧率,整数)。分辨率优先取有效/输出分辨率而非全阵列。找不到的字段填 null。`;
+      const prompt = `Read this image sensor datasheet, extract parameters, return only a JSON object, no explanation, no Markdown code block. Fields: name(model), vendor, px(pixel size, µm, numeric), resW(effective pixel width, integer), resH(effective pixel height, integer), fmt(optical format, e.g. 1/4"), shutter(value can only be Global or Rolling), mono(value can only be Mono or Color or Mono/Color), interface(e.g. MIPI 1-lane), fps(max frame rate, integer). Resolution priority: effective/output resolution rather than full array. Fill null for missing fields.`;
       const txt = await callLLM(prompt, [file]);
       const clean = txt.replace(/```json/gi, "").replace(/```/g, "").trim();
       const j = JSON.parse(clean);
@@ -634,14 +942,14 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
         note: [j.interface, j.fps ? "≤" + j.fps + "fps" : ""].filter(Boolean).join(" · "),
       });
       const rep = [];
-      if (j.px) rep.push("像素 " + j.px + "µm");
+      if (j.px) rep.push("Pixel " + j.px + "µm");
       if (j.resW) rep.push(j.resW + "×" + j.resH);
       if (j.fmt) rep.push(j.fmt);
       if (j.shutter) rep.push(j.shutter);
       if (j.mono) rep.push(j.mono);
-      setPmsg("AI 已识别并加入对比：" + rep.join(" · ") + " —— 请在表格核对/修改");
+      setPmsg("AI parsed and added to comparison: " + rep.join(" · ") + " —— Please verify/edit in table");
     } catch (e) {
-      setAiErr("AI 识别失败（" + ((e && e.message) || "未知") + "）。可改用下方②离线文本粘贴，或重试 / 改传规格页截图。");
+      setAiErr("AI parse failed (" + ((e && e.message) || "unknown") + "). Try offline text paste below, retry, or upload a clearer spec page screenshot.");
     } finally {
       setAiBusy(false);
     }
@@ -649,11 +957,11 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
   return (
     <div style={panel}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <SectionLabel n="02" t="传感器对比" s="点行展开详情 · 双击单元格可编辑 · 支持自定义与库内预设" />
+        <SectionLabel n="02" t={t("sensor_bench")} s={t("bench_sub")} />
         <div style={{ display: "flex", gap: 8, position: "relative" }}>
-          <button onClick={() => setShowParse((v) => !v)} style={btn(C.tealDk)}>识别 Datasheet</button>
-          <button onClick={() => add(null)} style={btn(C.sub, true)}>+ 自定义</button>
-          <button onClick={() => setShowLib((v) => !v)} style={btn(C.teal)}>+ 从库添加 ▾</button>
+          <button onClick={() => setShowParse((v) => !v)} style={btn(C.tealDk)}>{t("parse_ds")}</button>
+          <button onClick={() => add(null)} style={btn(C.sub, true)}>{t("custom")}</button>
+          <button onClick={() => setShowLib((v) => !v)} style={btn(C.teal)}>{t("add_lib")}</button>
           {showLib && (
             <div style={{ position: "absolute", right: 0, top: 34, zIndex: 20, background: "#fff", border: `1px solid ${C.lineHard}`, borderRadius: 6, boxShadow: "0 8px 24px rgba(0,0,0,.12)", width: 320, maxHeight: 340, overflow: "auto" }}>
               {SENSOR_LIB.map((l) => (
@@ -666,7 +974,7 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
                   <div style={{ fontSize: 11, color: C.sub }}>{l.note}</div>
                 </div>
               ))}
-              <div style={{ padding: "6px 12px", fontSize: 10.5, color: C.sub, background: C.paper }}>库内为常见典型值，添加后可在表内编辑覆盖</div>
+              <div style={{ padding: "6px 12px", fontSize: 10.5, color: C.sub, background: C.paper }}>{t("lib_tip")}</div>
             </div>
           )}
         </div>
@@ -674,33 +982,31 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
 
       {showParse && (
         <div style={{ border: `1px dashed ${C.teal}`, borderRadius: 6, background: C.paper, padding: 12, marginTop: 10 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: C.tealDk, marginBottom: 6 }}>从 Datasheet 识别参数 → 自动加一行到对比（所有字段仍可手改）</div>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: C.tealDk, marginBottom: 6 }}>{t("parse_title")}</div>
 
           <div style={{ background: "#fff", border: `1px solid ${C.line}`, borderRadius: 6, padding: 10, marginBottom: 10 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.ink, marginBottom: 3 }}>① AI 智能识别 · 直接读 PDF / 图片 <span style={{ color: C.pass, fontWeight: 600 }}>· 用你在「设置」里配置的模型（Kimi 等）· 无需装 OCR</span></div>
-            <div style={{ fontSize: 11.5, color: C.sub, marginBottom: 7 }}>
-              直接上传 datasheet 的 PDF，或规格页截图（PNG/JPG）。AI 会读取并填入。大文件较慢；只截「关键参数 / 规格表」那一页更快更准。
-            </div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.ink, marginBottom: 3 }}>{t("ai_title")} <span style={{ color: C.pass, fontWeight: 600 }}>· {t("ai_badge")}</span></div>
+            <div style={{ fontSize: 11.5, color: C.sub, marginBottom: 7 }}>{t("ai_desc")}</div>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
               <label style={{ ...btn(C.teal), display: "inline-block", opacity: aiBusy ? 0.55 : 1, pointerEvents: aiBusy ? "none" : "auto" }}>
-                {aiBusy ? "识别中…" : "上传 PDF / 图片识别"}
+                {aiBusy ? t("parsing") : t("upload_btn")}
                 <input type="file" accept=".pdf,image/*" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) aiExtract(f); }} style={{ display: "none" }} />
               </label>
-              {aiBusy && <span style={{ fontSize: 11.5, color: C.tealDk }}>正在读取并解析，请稍候…</span>}
+              {aiBusy && <span style={{ fontSize: 11.5, color: C.tealDk }}>{t("parsing")}</span>}
               {aiErr && <span style={{ fontSize: 11.5, color: C.fail, flex: 1 }}>{aiErr}</span>}
             </div>
           </div>
 
           <div style={{ background: "#fff", border: `1px solid ${C.line}`, borderRadius: 6, padding: 10 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.ink, marginBottom: 3 }}>② 离线文本识别 · 兜底 <span style={{ color: C.sub, fontWeight: 600 }}>· 无网络 · 100% 可靠</span></div>
-            <div style={{ fontSize: 11.5, color: C.sub, marginBottom: 6 }}>想完全离线、或 AI 偶尔不通时用：把含参数的文字粘贴进来（或选 .txt），按规则提取。</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.ink, marginBottom: 3 }}>{t("offline_title2")} <span style={{ color: C.sub, fontWeight: 600 }}>· {t("offline_badge")}</span></div>
+            <div style={{ fontSize: 11.5, color: C.sub, marginBottom: 6 }}>{t("offline_desc2")}</div>
             <textarea value={ptext} onChange={(e) => setPtext(e.target.value)}
               placeholder={'例：像素尺寸 1.75 μm x 1.75 μm；像素阵列 1600H x 1200V；镜头光学尺寸 1/5.1"；1-lane MIPI；黑白 ...'}
               style={{ width: "100%", minHeight: 68, boxSizing: "border-box", fontFamily: MONO, fontSize: 12, padding: 8, border: `1px solid ${C.lineHard}`, borderRadius: 5, resize: "vertical", color: C.ink }} />
             <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
-              <button onClick={() => runParse(ptext)} style={btn(C.tealDk)}>识别并加入对比</button>
-              <label style={{ ...btn(C.sub, true), display: "inline-block" }}>选择 .txt<input type="file" accept=".txt,.csv,.md,text/plain" onChange={onFile} style={{ display: "none" }} /></label>
-              <button onClick={() => { setPtext(""); setPmsg(""); }} style={btn(C.sub, true)}>清空</button>
+              <button onClick={() => runParse(ptext)} style={btn(C.tealDk)}>{t("offline_parse")}</button>
+              <label style={{ ...btn(C.sub, true), display: "inline-block" }}>.txt<input type="file" accept=".txt,.csv,.md,text/plain" onChange={onFile} style={{ display: "none" }} /></label>
+              <button onClick={() => { setPtext(""); setPmsg(""); }} style={btn(C.sub, true)}>{t("clear")}</button>
             </div>
           </div>
           {pmsg && <div style={{ fontSize: 11.5, color: C.tealDk, marginTop: 8 }}>{pmsg}</div>}
@@ -711,7 +1017,7 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
           <thead>
             <tr style={{ background: C.ink, color: "#fff", fontFamily: MONO, fontSize: 11 }}>
-              {[["传感器", "传感器型号 / 厂商，可直接改名"], ["像元/分辨率", "像元=单个像素的物理尺寸(µm)，越小越精细但进光越少；分辨率=横×纵像素数"], ["推荐焦距", "能在整个工作距离范围覆盖目标的最大标准 M12 焦距（焦距越大目标越充满画面）"], ["覆盖余量@最近", "最近工作距离下视场比目标大多少；<3% 偏紧，负值=无法覆盖"], ["目标像素@标称", "标称距离下目标在画面上实际占的像素(宽×高)"], ["满足需求", "目标像素是否达到场景里填写的需求像素"], ["物方分辨率", "每个像素对应的实际物理尺寸(µm)，越小越精细"], ["景深@F#", "当前光圈下目标可沿光轴移动而仍清晰的范围"], ["衍射", "当前光圈的艾里斑直径(以像素计)；>2px 说明光圈太小、被衍射限制"], ["判定", "综合覆盖/像素/景深/衍射的选型结论"], ["", ""]].map(([h, tip], i) => (
+              {[[t("table_name"), ""], [t("table_px"), ""], [t("table_fl"), ""], [t("table_margin"), ""], [t("table_tpx"), ""], [t("table_req"), ""], [t("table_samp"), ""], [t("table_dof"), ""], [t("table_diff"), ""], [t("table_verdict"), ""], ["", ""]].map(([h, tip], i) => (
                 <th key={i} title={tip} style={{ padding: "7px 8px", textAlign: i === 0 ? "left" : "center", fontWeight: 600, whiteSpace: "nowrap", cursor: tip ? "help" : "default" }}>{h}{tip ? " ⁱ" : ""}</th>
               ))}
             </tr>
@@ -744,8 +1050,8 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
                   <Cell v={r.valid ? `${r.airyPx.toFixed(1)}px` : "—"} mono tone={r.airyPx > 2 ? "warn" : null} />
                   <td style={{ textAlign: "center" }}><Verdict v={r.verdict} /></td>
                   <td style={{ textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => dup(s)} title="复制" style={miniBtn}>复制</button>
-                    <button onClick={() => rm(s.id)} title="删除" style={miniBtn}>✕</button>
+                    <button onClick={() => dup(s)} title={t("copy")} style={miniBtn}>{t("copy")}</button>
+                    <button onClick={() => rm(s.id)} title={t("delete")} style={miniBtn}>{t("delete")}</button>
                   </td>
                 </tr>
               );
@@ -753,61 +1059,56 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
           </tbody>
         </table>
       </div>
-      <div style={{ fontSize: 11, color: C.sub, marginTop: 6 }}>
-        提示：覆盖余量按<b>最小工作距离</b>校核（最不利工况）；目标像素按<b>标称</b>工作距离；衍射列为该 F# 下艾里斑直径（&gt;2px 建议开大光圈）。
-      </div>
+      <div style={{ fontSize: 11, color: C.sub, marginTop: 6 }}>{t("table_tip")}</div>
     </div>
   );
 }
 
 // ---------------- 详情面板 ----------------
 function Detail({ sc, s, r }) {
+  const { t } = React.useContext(LangContext);
   return (
     <div style={panel}>
-      <SectionLabel n="03" t={`详情 · ${s.name}`} s="选定传感器的完整读数、光路示意与公式" />
+      <SectionLabel n="03" t={`${t("detail")} ${s.name}`} s={t("detail_sub")} />
       <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 14, marginTop: 10 }}>
         {/* 左：读数 */}
         <div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <BigReadout label="推荐 M12 焦距" value={r.fRec} unit="mm" sub={`贴合焦距 f*=${f1(r.fBind)}mm（${r.limAxis}约束）· 越接近 f* 目标越充满`} />
-            <BigReadout label="放大倍率 β" value={r.beta.toFixed(4)} unit="" sub={`@标称 WD=${sc.wdNom}mm`} />
+            <BigReadout label={t("readout_fl")} value={r.fRec} unit={t("mm")} sub={`f*=${f1(r.fBind)}mm (${r.limAxis} bound) · closer to f* = more fill`} />
+            <BigReadout label={t("readout_beta")} value={r.beta.toFixed(4)} unit="" sub={`@Nom WD=${sc.wdNom}mm`} />
           </div>
-          <div style={{ fontSize: 11, color: C.sub, marginTop: 6 }}>
-            当前安装朝向：<b style={{ color: C.tealDk }}>{r.orientUsed === "LL" ? "长轴‖长边（横装）" : "长轴‖短边（转90°竖装）"}</b>
-            {(sc.orient || "auto") === "auto" ? " · 自动选优" : " · 手动锁定"}
-            {r.orientUsed === "LL" ? "（目标长边落在高分辨率长轴上）" : "（目标长边落在短轴上）"}
-          </div>
-          <Divider t="覆盖 · 视场" />
+          <div style={{ fontSize: 11, color: C.sub, marginTop: 6 }}>{t("readout_orient")}: <b style={{ color: C.tealDk }}>{r.orientUsed === "LL" ? t("orient_ll_full") : t("orient_ls_full")}</b>{(sc.orient || "auto") === "auto" ? " · " + t("orient_auto_lock") : " · " + t("manual_lock")}{r.orientUsed === "LL" ? " (target long edge on high-res long axis)" : " (target long edge on short axis)"}</div>
+          <Divider t={t("cover_fov")} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
-            <Readout label="AFOV 水平" v={f1(r.afovH)} u="°" />
-            <Readout label="AFOV 垂直" v={f1(r.afovV)} u="°" />
-            <Readout label="AFOV 对角" v={f1(r.afovD)} u="°" />
+            <Readout label={t("afov_h")} v={f1(r.afovH)} u={t("deg")} />
+            <Readout label={t("afov_v")} v={f1(r.afovV)} u={t("deg")} />
+            <Readout label={t("afov_d")} v={f1(r.afovD)} u={t("deg")} />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 6 }}>
-            <Readout label={`长轴余量 @WD=${sc.wdMin}`} v={pct(r.marginLong)} u="" tone={r.marginLong < 0 ? "bad" : r.marginLong < 0.03 ? "warn" : "ok"} />
-            <Readout label={`短轴余量 @WD=${sc.wdMin}`} v={pct(r.marginShort)} u="" tone={r.marginShort < 0 ? "bad" : r.marginShort < 0.03 ? "warn" : "ok"} />
+            <Readout label={`${t("margin_long")} @WD=${sc.wdMin}`} v={pct(r.marginLong)} u="" tone={r.marginLong < 0 ? "bad" : r.marginLong < 0.03 ? "warn" : "ok"} />
+            <Readout label={`${t("margin_short")} @WD=${sc.wdMin}`} v={pct(r.marginShort)} u="" tone={r.marginShort < 0 ? "bad" : r.marginShort < 0.03 ? "warn" : "ok"} />
           </div>
-          <Divider t="像素 · 采样" />
+          <Divider t={t("pixel_sample")} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-            <Readout label="目标像素 @标称" v={`${f0(r.tpxLong)}×${f0(r.tpxShort)}`} u="" tone={r.resReqOK == null ? null : r.resReqOK ? "ok" : "bad"} />
-            <Readout label="画幅利用率" v={(r.util * 100).toFixed(0)} u="%" />
-            <Readout label="物方分辨率 @标称" v={f1(r.sampNom)} u="µm/px" />
-            <Readout label="物方分辨率 @最远" v={f1(r.sampMax)} u="µm/px" />
+            <Readout label={t("target_px")} v={`${f0(r.tpxLong)}×${f0(r.tpxShort)}`} u="" tone={r.resReqOK == null ? null : r.resReqOK ? "ok" : "bad"} />
+            <Readout label={t("utilization")} v={(r.util * 100).toFixed(0)} u={t("percent")} />
+            <Readout label={t("obj_res_nom")} v={f1(r.sampNom)} u="µm/px" />
+            <Readout label={t("obj_res_max")} v={f1(r.sampMax)} u="µm/px" />
           </div>
-          <Divider t="景深 · 衍射" />
+          <Divider t={t("dof_diffraction")} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-            <Readout label={`景深 @F/${sc.fnum}`} v={r.dofTotal === Infinity ? "∞" : f0(r.dofTotal)} u="mm" tone={r.dofOK ? "ok" : "warn"} />
-            <Readout label={`需覆盖行程`} v={f0(r.dofNeed)} u="mm" />
-            <Readout label={`艾里斑 @F/${sc.fnum}`} v={f1(r.airy)} u="µm" tone={r.airyPx > 2 ? "warn" : "ok"} />
-            <Readout label="衍射上限 F#" v={f1(r.nDiff)} u="" sub="超过此值分辨率软化" />
+            <Readout label={`${t("dof")} @F/${sc.fnum}`} v={r.dofTotal === Infinity ? "∞" : f0(r.dofTotal)} u={t("mm")} tone={r.dofOK ? "ok" : "warn"} />
+            <Readout label={t("dof_need")} v={f0(r.dofNeed)} u={t("mm")} />
+            <Readout label={`${t("airy")} @F/${sc.fnum}`} v={f1(r.airy)} u="µm" tone={r.airyPx > 2 ? "warn" : "ok"} />
+            <Readout label={t("diff_limit")} v={f1(r.nDiff)} u="" sub="Resolution softens above this" />
           </div>
           <div style={{ marginTop: 8 }}>
-            <CheckLine ok={r.covered} label="焦距可覆盖目标" detail={`标准 ${r.fRec}mm ≤ 覆盖上限 ${f1(r.fBind)}mm`} />
-            {r.resReqOK != null && <CheckLine ok={r.resReqOK} label={`目标像素满足需求 ${sc.reqW}×${sc.reqH}`} detail={`实际 ${f0(r.tpxLong)}×${f0(r.tpxShort)}`} />}
-            {r.featOK != null && <CheckLine ok={r.featOK} label={`最小特征 ${sc.feat}mm 满足 2px 采样`} detail={`最远采样 ${f1(r.sampMax)}µm/px ×2 = ${f1(r.sampMax * 2)}µm`} />}
-            <CheckLine ok={r.dofOK} label={`景深覆盖 ${f0(r.dofNeed)}mm 行程`} detail={r.dofTotal === Infinity ? "景深 → ∞" : `景深 ${f0(r.dofTotal)}mm（${f0(r.near)}–${r.far === Infinity ? "∞" : f0(r.far)}mm）`} />
-            {r.aspectMismatch && <CheckLine ok={null} label="纵横比不匹配" detail={`目标 ${r.tAspect.toFixed(2)}:1 vs 传感器 ${r.sAspect.toFixed(2)}:1，两侧留背景`} />}
-            {r.resReqOK === false && r.worstMargin > 0.08 && <CheckLine ok={null} label="像素不足，但覆盖余量仍偏大" detail={`可把焦距增至更接近 f*=${f1(r.fBind)}mm（当前 ${r.fRec}mm）——目标更充满、像素更多。标准档不够贴合时可考虑非标/可调焦镜头`} />}
+            <CheckLine ok={r.covered} label={t("check_cover")} detail={`Std ${r.fRec}mm ≤ cover limit ${f1(r.fBind)}mm`} />
+            {r.resReqOK != null && <CheckLine ok={r.resReqOK} label={`${t("check_req")} ${sc.reqW}×${sc.reqH}`} detail={`Actual ${f0(r.tpxLong)}×${f0(r.tpxShort)}`} />}
+            {r.featOK != null && <CheckLine ok={r.featOK} label={`${t("check_feat")} ${sc.feat}mm`} detail={`Max WD sampling ${f1(r.sampMax)}µm/px ×2 = ${f1(r.sampMax * 2)}µm`} />}
+            <CheckLine ok={r.dofOK} label={`${t("check_dof")} ${f0(r.dofNeed)}mm`} detail={r.dofTotal === Infinity ? "DOF → ∞" : `DOF ${f0(r.dofTotal)}mm (${f0(r.near)}–${r.far === Infinity ? "∞" : f0(r.far)}mm)`} />
+            {r.aspectMismatch && <CheckLine ok={null} label={t("check_aspect")} detail={`Target ${r.tAspect.toFixed(2)}:1 vs sensor ${r.sAspect.toFixed(2)}:1, background on sides`} />}
+            {r.resReqOK === false && r.worstMargin > 0.08 && <CheckLine ok={null} label={t("check_more")} detail={`Increase focal length closer to f*=${f1(r.fBind)}mm (current ${r.fRec}mm) for more fill & pixels. Consider custom/adjustable lens if standard steps are too coarse.`} />}
           </div>
         </div>
 
@@ -815,12 +1116,12 @@ function Detail({ sc, s, r }) {
         <div>
           <RayDiagram sc={sc} r={r} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 10 }}>
-            <Formula t="焦距 (薄透镜精确)" f={"f = s·WD / (FOV + s)"} />
-            <Formula t="物方视场" f={"FOV = s·(WD − f) / f"} />
-            <Formula t="物方采样" f={"µm/px = 像元·(WD−f)/f"} />
-            <Formula t="景深 (超焦距)" f={`H = f²/(F·c)+f，c=${sc.cocPx}×像元`} />
-            <Formula t="艾里斑直径" f={"d = 2.44·λ·F"} />
-            <Formula t="覆盖校核" f={"以最小 WD 为最不利工况"} />
+            <Formula t={t("formula_fl")} f={"f = s·WD / (FOV + s)"} />
+            <Formula t={t("formula_fov")} f={"FOV = s·(WD − f) / f"} />
+            <Formula t={t("formula_samp")} f={"µm/px = pixel·(WD−f)/f"} />
+            <Formula t={t("formula_dof")} f={`H = f²/(F·c)+f, c=${sc.cocPx}×pixel`} />
+            <Formula t={t("formula_airy")} f={"d = 2.44·λ·F"} />
+            <Formula t={t("formula_cover")} f={"Min WD is the worst-case scenario"} />
           </div>
         </div>
       </div>
@@ -830,6 +1131,7 @@ function Detail({ sc, s, r }) {
 
 // ---------------- 光路 / 视场示意（侧视，含透镜）----------------
 function RayDiagram({ sc, r }) {
+  const { t } = React.useContext(LangContext);
   const W = 470, H = 250, padL = 58, padR = 24, cy = H / 2;
   const lensX = padL, xMax = W - padR, apex = lensX + 16; // apex=镜头中心(光线发出点)
   const wdMin = num(sc.wdMin), wdMax = num(sc.wdMax), wdNom = num(sc.wdNom);
@@ -855,7 +1157,7 @@ function RayDiagram({ sc, r }) {
 
   return (
     <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, background: "#fff", padding: 8 }}>
-      <div style={{ fontFamily: MONO, fontSize: 11, color: C.tealDk, marginBottom: 2 }}>光路示意 · 侧视 · 传感器 → M12 镜头 → 目标面覆盖</div>
+      <div style={{ fontFamily: MONO, fontSize: 11, color: C.tealDk, marginBottom: 2 }}>{t("ray_title")}</div>
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto" }}>
         {/* 参考网格 */}
         {[0.28, 0.72].map((p, i) => <line key={i} x1={0} x2={W} y1={H * p} y2={H * p} stroke={C.grid} strokeWidth="1" />)}
@@ -884,17 +1186,17 @@ function RayDiagram({ sc, r }) {
         <g>
           <rect x={wNom - 3} y={cy - h2(tLong)} width="6" height={sy(tLong)} fill={C.fail} opacity="0.2" />
           <line x1={wNom} y1={cy - h2(tLong)} x2={wNom} y2={cy + h2(tLong)} stroke={C.fail} strokeWidth="2.6" />
-          <text x={wNom} y={cy + h2(tLong) + 13} fontSize="9.5" fill={C.fail} fontFamily={MONO} textAnchor="middle">目标 {f0(tLong)}mm</text>
+          <text x={wNom} y={cy + h2(tLong) + 13} fontSize="9.5" fill={C.fail} fontFamily={MONO} textAnchor="middle">{t("target")} {f0(tLong)}mm</text>
         </g>
 
         {/* 传感器 */}
         <line x1={lensX} y1={cy - 11} x2={lensX} y2={cy + 11} stroke={C.ink} strokeWidth="3" />
-        <text x={lensX - 4} y={cy - 15} fontSize="9.5" fill={C.sub} fontFamily={MONO} textAnchor="middle">Sensor</text>
+        <text x={lensX - 4} y={cy - 15} fontSize="9.5" fill={C.sub} fontFamily={MONO} textAnchor="middle">{t("sensor")}</text>
         {/* 镜头（双凸透镜）*/}
         <path d={lensPath} fill={C.teal} opacity="0.9" fillOpacity="0.16" stroke={C.teal} strokeWidth="1.4" />
-        <text x={apex} y={H - 6} fontSize="10" fill={C.tealDk} fontFamily={MONO} textAnchor="middle">M12 · f={f}</text>
+        <text x={apex} y={H - 6} fontSize="10" fill={C.tealDk} fontFamily={MONO} textAnchor="middle">{t("lens")}{f}</text>
       </svg>
-      <div style={{ fontSize: 10.5, color: C.sub }}>阴影带=工作距离行程 {f0(wdMin)}–{f0(wdMax)}mm；红条=目标长轴 {f0(tLong)}mm；青线=该焦距在近/远距的视场。目标短于近距视场即可全程覆盖。</div>
+      <div style={{ fontSize: 10.5, color: C.sub }}>{t("ray_tip")}</div>
     </div>
   );
 }
@@ -905,7 +1207,8 @@ function Cell({ v, tone, strong, mono }) {
   return <td style={{ textAlign: "center", padding: "6px 8px", color: col, fontWeight: strong ? 800 : 500, fontFamily: mono ? MONO : SANS, fontSize: mono ? 11.5 : 12.5, whiteSpace: "nowrap" }}>{v}</td>;
 }
 function Verdict({ v }) {
-  const m = { pass: [C.pass, C.passBg, "通过"], warn: [C.warn, C.warnBg, "注意"], fail: [C.fail, C.failBg, "不满足"] }[v] || [C.sub, "#eee", "—"];
+  const { t } = React.useContext(LangContext);
+  const m = { pass: [C.pass, C.passBg, t("verdict_pass")], warn: [C.warn, C.warnBg, t("verdict_warn")], fail: [C.fail, C.failBg, t("verdict_fail")] }[v] || [C.sub, "#eee", t("na")];
   return <span style={{ color: m[0], background: m[1], border: `1px solid ${m[0]}44`, borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{m[2]}</span>;
 }
 function SectionLabel({ n, t, s }) {
@@ -981,9 +1284,10 @@ function Formula({ t, f }) {
   );
 }
 function Footnote() {
+  const { t } = React.useContext(LangContext);
   return (
     <div style={{ fontSize: 11, color: C.sub, lineHeight: 1.6, marginTop: 14, borderTop: `1px solid ${C.line}`, paddingTop: 10 }}>
-      <b>方法说明：</b>焦距用薄透镜精确式 f = s·WD/(FOV+s)（非低倍率近似）；覆盖性以最小工作距离为最不利工况，取长/短两轴中更严者。景深按对焦于标称 WD、超焦距法估算，弥散圆默认 2×像元。衍射列为选定 F# 下艾里斑直径。<b>本工具为近轴估算</b>，实际选型以镜头 MTF、像圈、CRA 与厂商景深曲线为准；WD 起算基准（前端面/主平面）须与镜头厂统一。全部计算在本地完成，不联网、不调用任何接口。
+      <b>{t("footnote_title")}:</b> {t("footnote_body")}
     </div>
   );
 }
