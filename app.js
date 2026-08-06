@@ -320,6 +320,35 @@ const I18N = {
 };
 
 const LangContext = React.createContext({ lang: 'zh', t: (k) => k, setLang: () => {} });
+
+// 数据值 → 显示文本映射（根据语言）
+const VAL_MAP = {
+  zh: {
+    "Global": "全局", "Rolling": "卷帘",
+    "Mono": "黑白", "Color": "彩色", "Mono/Color": "黑白/彩色", "Mono/RGB-IR": "黑白/RGB-IR",
+    "Long-axis": "长轴", "Short-axis": "短轴",
+    "Custom": "自定义",
+    "Pass": "通过", "Warning": "注意", "Fail": "不满足",
+    "Yes": "是", "No": "否",
+    "Global Shutter": "全局快门", "Rolling Shutter": "卷帘快门",
+    "IR-cut": "IR-cut",
+  },
+  en: {} // 英文直接显示原值
+};
+// 扩展 flags 映射
+VAL_MAP.zh["FL_Coverage_Fail"] = "焦距无法覆盖";
+VAL_MAP.zh["Target_Pixels_Insufficient"] = "目标像素不足";
+VAL_MAP.zh["Feature_Sampling_Insufficient"] = "特征采样不足";
+VAL_MAP.zh["Image_Circle_Uncovered"] = "像圈不覆盖";
+VAL_MAP.zh["Coverage_Margin_Tight"] = "覆盖余量偏紧";
+VAL_MAP.zh["Diffraction_Limited"] = "衍射受限";
+VAL_MAP.zh["DOF_Insufficient"] = "景深略欠";
+function displayVal(v, lang) {
+  if (v == null || v === "") return v;
+  const s = String(v);
+  return VAL_MAP[lang]?.[s] || s;
+}
+
 // ==================== /国际化字典 ====================
 // 标准 M12 定焦焦距梯度 (mm)
 const STD_M12 = [1.8, 2.1, 2.5, 2.8, 3.0, 3.6, 4, 4.3, 4.5, 5, 5.5, 6, 8, 10, 12, 16, 25];
@@ -370,17 +399,17 @@ async function callLLM(instruction, files) {
 
 // 传感器库：常见典型值，可在行内编辑覆盖。px=像元(µm)，resW/resH=有效像素
 const SENSOR_LIB = [
-  { name: "SC202CS", vendor: "SmartSens", px: 1.75, resW: 1600, resH: 1200, fmt: '1/5.1"', shutter: "Rolling", mono: "Mono/Color", note: "2MP low-cost, mono PN -MSMNN00" },
-  { name: "OV9281", vendor: "OmniVision", px: 3.0, resW: 1280, resH: 800, fmt: '1/4"', shutter: "Global", mono: "Mono", note: "1MP Global Shutter, OmniPixel3-GS" },
-  { name: "AR0234", vendor: "onsemi", px: 3.0, resW: 1920, resH: 1200, fmt: '1/2.6"', shutter: "Global", mono: "Mono/Color", note: "2.3MP Global Shutter, MV common" },
-  { name: "OV2311", vendor: "OmniVision", px: 3.0, resW: 1600, resH: 1300, fmt: '1/2.9"', shutter: "Global", mono: "Mono/RGB-IR", note: "2MP Global Shutter" },
-  { name: "AR0144", vendor: "onsemi", px: 3.0, resW: 1280, resH: 800, fmt: '1/4"', shutter: "Global", mono: "Mono/Color", note: "1MP Global Shutter" },
-  { name: "IMX296", vendor: "Sony", px: 3.45, resW: 1456, resH: 1088, fmt: '1/2.9"', shutter: "Global", mono: "Mono/Color", note: "1.58MP Global, Pregius" },
-  { name: "IMX287", vendor: "Sony", px: 6.9, resW: 728, resH: 544, fmt: '1/2.9"', shutter: "Global", mono: "Mono/Color", note: "0.4MP large pixel, high sensitivity" },
-  { name: "OV5647", vendor: "OmniVision", px: 1.4, resW: 2592, resH: 1944, fmt: '1/4"', shutter: "Rolling", mono: "Color", note: "5MP Rolling (Raspberry Pi v1)" },
-  { name: "IMX219", vendor: "Sony", px: 1.12, resW: 3280, resH: 2464, fmt: '1/4"', shutter: "Rolling", mono: "Color", note: "8MP Rolling (Raspberry Pi v2)" },
-  { name: "IMX477", vendor: "Sony", px: 1.55, resW: 4056, resH: 3040, fmt: '1/2.3"', shutter: "Rolling", mono: "Color", note: "12MP Rolling (Raspberry Pi HQ)" },
-  { name: "MT9V034", vendor: "onsemi", px: 6.0, resW: 752, resH: 480, fmt: '1/3"', shutter: "Global", mono: "Mono/Color", note: "WVGA Global, classic robotics vision" },
+  { name: "SC202CS", vendor: "SmartSens", px: 1.75, resW: 1600, resH: 1200, fmt: '1/5.1"', shutter: "Rolling", mono: "Mono/Color", note: "2MP low-cost, mono PN -MSMNN00", noteZh: "2MP 低成本，黑白料号 -MSMNN00" },
+  { name: "OV9281", vendor: "OmniVision", px: 3.0, resW: 1280, resH: 800, fmt: '1/4"', shutter: "Global", mono: "Mono", note: "1MP Global Shutter, OmniPixel3-GS", noteZh: "1MP 全局快门，OmniPixel3-GS" },
+  { name: "AR0234", vendor: "onsemi", px: 3.0, resW: 1920, resH: 1200, fmt: '1/2.6"', shutter: "Global", mono: "Mono/Color", note: "2.3MP Global Shutter, MV common", noteZh: "2.3MP 全局快门，机器视觉常用" },
+  { name: "OV2311", vendor: "OmniVision", px: 3.0, resW: 1600, resH: 1300, fmt: '1/2.9"', shutter: "Global", mono: "Mono/RGB-IR", note: "2MP Global Shutter", noteZh: "2MP 全局快门" },
+  { name: "AR0144", vendor: "onsemi", px: 3.0, resW: 1280, resH: 800, fmt: '1/4"', shutter: "Global", mono: "Mono/Color", note: "1MP Global Shutter", noteZh: "1MP 全局快门" },
+  { name: "IMX296", vendor: "Sony", px: 3.45, resW: 1456, resH: 1088, fmt: '1/2.9"', shutter: "Global", mono: "Mono/Color", note: "1.58MP Global, Pregius", noteZh: "1.58MP 全局，Pregius" },
+  { name: "IMX287", vendor: "Sony", px: 6.9, resW: 728, resH: 544, fmt: '1/2.9"', shutter: "Global", mono: "Mono/Color", note: "0.4MP large pixel, high sensitivity", noteZh: "0.4MP 大像元，高灵敏" },
+  { name: "OV5647", vendor: "OmniVision", px: 1.4, resW: 2592, resH: 1944, fmt: '1/4"', shutter: "Rolling", mono: "Color", note: "5MP Rolling (Raspberry Pi v1)", noteZh: "5MP 卷帘 (树莓派 v1)" },
+  { name: "IMX219", vendor: "Sony", px: 1.12, resW: 3280, resH: 2464, fmt: '1/4"', shutter: "Rolling", mono: "Color", note: "8MP Rolling (Raspberry Pi v2)", noteZh: "8MP 卷帘 (树莓派 v2)" },
+  { name: "IMX477", vendor: "Sony", px: 1.55, resW: 4056, resH: 3040, fmt: '1/2.3"', shutter: "Rolling", mono: "Color", note: "12MP Rolling (Raspberry Pi HQ)", noteZh: "12MP 卷帘 (树莓派 HQ)" },
+  { name: "MT9V034", vendor: "onsemi", px: 6.0, resW: 752, resH: 480, fmt: '1/3"', shutter: "Global", mono: "Mono/Color", note: "WVGA Global, classic robotics vision", noteZh: "WVGA 全局，经典机器人视觉" },
 ];
 
 // 常见光学格式对角 (仅供换算参考，实际以像元×分辨率为准)
@@ -488,14 +517,14 @@ function compute(sc, s) {
   // 综合判定
   let verdict = "pass";
   const flags = [];
-  if (!covered) { verdict = "fail"; flags.push("焦距无法覆盖"); }
-  if (resReqOK === false) { verdict = "fail"; flags.push("目标像素不足"); }
-  if (featOK === false) { verdict = verdict === "fail" ? "fail" : "warn"; flags.push("特征采样不足"); }
-  if (circleOK === false) { verdict = "fail"; flags.push("像圈不覆盖"); }
+  if (!covered) { verdict = "fail"; flags.push("FL_Coverage_Fail"); }
+  if (resReqOK === false) { verdict = "fail"; flags.push("Target_Pixels_Insufficient"); }
+  if (featOK === false) { verdict = verdict === "fail" ? "fail" : "warn"; flags.push("Feature_Sampling_Insufficient"); }
+  if (circleOK === false) { verdict = "fail"; flags.push("Image_Circle_Uncovered"); }
   if (verdict !== "fail") {
-    if (worstMargin < 0.03) { verdict = "warn"; flags.push("覆盖余量偏紧"); }
-    if (airyPx > 2) { verdict = verdict === "pass" ? "warn" : verdict; flags.push("衍射受限"); }
-    if (!dofOK) { flags.push("景深略欠"); }
+    if (worstMargin < 0.03) { verdict = "warn"; flags.push("Coverage_Margin_Tight"); }
+    if (airyPx > 2) { verdict = verdict === "pass" ? "warn" : verdict; flags.push("Diffraction_Limited"); }
+    if (!dofOK) { flags.push("DOF_Insufficient"); }
   }
 
   return {
@@ -555,9 +584,11 @@ function parseDatasheet(text) {
   // 帧率
   const fpss = [...t.matchAll(/(\d{2,3})\s*fps/gi)].map((x) => +x[1]).filter((x) => x <= 1000);
   // 厂商与型号
+  const vendorMap = { "思特威": "SmartSens", "索尼": "Sony", "格科微": "GalaxyCore", "豪威": "OmniVision" };
   const vendor = (t.match(/OmniVision|SmartSens|思特威|Sony|索尼|onsemi|ON Semiconductor|Samsung|GalaxyCore|格科微|豪威/i) || [])[0] || "";
+  const vendorEn = vendorMap[vendor] || vendor;
   const name = (t.match(/\b(?:SC|OV|IMX|AR|MT9[VMP]|GC|S5K)[A-Z]?\d{3,5}[A-Z]{0,3}\b/i) || [])[0] || "";
-  return { found, ifc, vendor, name, note: fpss.length ? "≤" + Math.max(...fpss) + "fps" : "" };
+  return { found, ifc, vendor: vendorEn, name, note: fpss.length ? "≤" + Math.max(...fpss) + "fps" : "" };
 }
 
 // ---------------- 通用选型范围（阶段一：未锁芯片）----------------
@@ -892,7 +923,7 @@ function RangeBox({ range: r }) {
 
 // ---------------- 传感器对比台 ----------------
 function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
-  const { t } = React.useContext(LangContext);
+  const { t, lang } = React.useContext(LangContext);
   const [showLib, setShowLib] = useState(false);
   const [showParse, setShowParse] = useState(false);
   const [ptext, setPtext] = useState("");
@@ -970,8 +1001,8 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
                   onMouseEnter={(e) => (e.currentTarget.style.background = C.chip)}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}>
                   <div style={{ fontWeight: 700 }}>{l.name} <span style={{ color: C.sub, fontWeight: 400 }}>· {l.vendor}</span></div>
-                  <div style={{ fontFamily: MONO, fontSize: 11, color: C.sub }}>{l.px}µm · {l.resW}×{l.resH} · {l.fmt} · {l.shutter} · {l.mono}</div>
-                  <div style={{ fontSize: 11, color: C.sub }}>{l.note}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 11, color: C.sub }}>{l.px}µm · {l.resW}×{l.resH} · {l.fmt} · {displayVal(l.shutter, lang)} · {displayVal(l.mono, lang)}</div>
+                  <div style={{ fontSize: 11, color: C.sub }}>{lang === "zh" && l.noteZh ? l.noteZh : l.note}</div>
                 </div>
               ))}
               <div style={{ padding: "6px 12px", fontSize: 10.5, color: C.sub, background: C.paper }}>{t("lib_tip")}</div>
@@ -1030,7 +1061,7 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
                   style={{ borderBottom: `1px solid ${C.grid}`, background: on ? C.chip : "#fff", cursor: "pointer" }}>
                   <td style={{ padding: "6px 8px", textAlign: "left" }}>
                     <input value={s.name} onChange={(e) => edit(s.id, "name", e.target.value)} onClick={(e) => e.stopPropagation()} style={cellIn(700, 90)} />
-                    <div style={{ fontSize: 10.5, color: C.sub }}>{s.vendor} {s.shutter && "· " + s.shutter}</div>
+                    <div style={{ fontSize: 10.5, color: C.sub }}>{s.vendor} {s.shutter && "· " + displayVal(s.shutter, lang)} {s.noteZh && lang === "zh" ? "· " + s.noteZh : s.note ? "· " + s.note : ""}</div>
                   </td>
                   <td style={{ textAlign: "center", fontFamily: MONO, fontSize: 11 }}>
                     <div style={{ display: "flex", gap: 3, justifyContent: "center", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
@@ -1044,7 +1075,7 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
                   <Cell v={r.valid ? r.fRec + " mm" : "—"} strong tone={r.covered ? null : "bad"} />
                   <Cell v={r.valid ? pct(r.worstMargin) : "—"} tone={!r.valid ? null : r.worstMargin < 0 ? "bad" : r.worstMargin < 0.03 ? "warn" : "ok"} />
                   <Cell v={r.valid ? `${f0(r.tpxLong)}×${f0(r.tpxShort)}` : "—"} mono />
-                  <Cell v={r.resReqOK == null ? "—" : r.resReqOK ? "是" : "否"} tone={r.resReqOK == null ? null : r.resReqOK ? "ok" : "bad"} />
+                  <Cell v={r.resReqOK == null ? "—" : r.resReqOK ? "Yes" : "No"} tone={r.resReqOK == null ? null : r.resReqOK ? "ok" : "bad"} />
                   <Cell v={r.valid ? `${f1(r.sampNom)} µm/px` : "—"} mono />
                   <Cell v={r.valid ? (r.dofTotal === Infinity ? "∞" : `${f0(r.dofTotal)} mm`) : "—"} mono tone={r.dofOK ? null : "warn"} />
                   <Cell v={r.valid ? `${r.airyPx.toFixed(1)}px` : "—"} mono tone={r.airyPx > 2 ? "warn" : null} />
@@ -1066,7 +1097,7 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
 
 // ---------------- 详情面板 ----------------
 function Detail({ sc, s, r }) {
-  const { t } = React.useContext(LangContext);
+  const { t, lang } = React.useContext(LangContext);
   return (
     <div style={panel}>
       <SectionLabel n="03" t={`${t("detail")} ${s.name}`} s={t("detail_sub")} />
@@ -1074,10 +1105,10 @@ function Detail({ sc, s, r }) {
         {/* 左：读数 */}
         <div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <BigReadout label={t("readout_fl")} value={r.fRec} unit={t("mm")} sub={`f*=${f1(r.fBind)}mm (${r.limAxis} bound) · closer to f* = more fill`} />
+            <BigReadout label={t("readout_fl")} value={r.fRec} unit={t("mm")} sub={`f*=${f1(r.fBind)}mm (${displayVal(r.limAxis, lang)} bound) · closer to f* = more fill`} />
             <BigReadout label={t("readout_beta")} value={r.beta.toFixed(4)} unit="" sub={`@Nom WD=${sc.wdNom}mm`} />
           </div>
-          <div style={{ fontSize: 11, color: C.sub, marginTop: 6 }}>{t("readout_orient")}: <b style={{ color: C.tealDk }}>{r.orientUsed === "LL" ? t("orient_ll_full") : t("orient_ls_full")}</b>{(sc.orient || "auto") === "auto" ? " · " + t("orient_auto_lock") : " · " + t("manual_lock")}{r.orientUsed === "LL" ? " (target long edge on high-res long axis)" : " (target long edge on short axis)"}</div>
+          <div style={{ fontSize: 11, color: C.sub, marginTop: 6 }}>{t("readout_orient")}: <b style={{ color: C.tealDk }}>{r.orientUsed === "LL" ? t("orient_ll_full") : t("orient_ls_full")}</b>{(sc.orient || "auto") === "auto" ? " · " + t("orient_auto_lock") : " · " + t("manual_lock")}{r.orientUsed === "LL" ? (lang === "zh" ? "（目标长边落在高分辨率长轴上）" : " (target long edge on high-res long axis)") : (lang === "zh" ? "（目标长边落在短轴上）" : " (target long edge on short axis)")}</div>
           <Divider t={t("cover_fov")} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
             <Readout label={t("afov_h")} v={f1(r.afovH)} u={t("deg")} />
@@ -1107,7 +1138,7 @@ function Detail({ sc, s, r }) {
             {r.resReqOK != null && <CheckLine ok={r.resReqOK} label={`${t("check_req")} ${sc.reqW}×${sc.reqH}`} detail={`Actual ${f0(r.tpxLong)}×${f0(r.tpxShort)}`} />}
             {r.featOK != null && <CheckLine ok={r.featOK} label={`${t("check_feat")} ${sc.feat}mm`} detail={`Max WD sampling ${f1(r.sampMax)}µm/px ×2 = ${f1(r.sampMax * 2)}µm`} />}
             <CheckLine ok={r.dofOK} label={`${t("check_dof")} ${f0(r.dofNeed)}mm`} detail={r.dofTotal === Infinity ? "DOF → ∞" : `DOF ${f0(r.dofTotal)}mm (${f0(r.near)}–${r.far === Infinity ? "∞" : f0(r.far)}mm)`} />
-            {r.aspectMismatch && <CheckLine ok={null} label={t("check_aspect")} detail={`Target ${r.tAspect.toFixed(2)}:1 vs sensor ${r.sAspect.toFixed(2)}:1, background on sides`} />}
+            {r.aspectMismatch && <CheckLine ok={null} label={t("check_aspect")} detail={`Target ${r.tAspect.toFixed(2)}:1 vs sensor ${r.sAspect.toFixed(2)}:1, ${lang === "zh" ? "两侧留背景" : "background on sides"}`} />}
             {r.resReqOK === false && r.worstMargin > 0.08 && <CheckLine ok={null} label={t("check_more")} detail={`Increase focal length closer to f*=${f1(r.fBind)}mm (current ${r.fRec}mm) for more fill & pixels. Consider custom/adjustable lens if standard steps are too coarse.`} />}
           </div>
         </div>
@@ -1203,8 +1234,10 @@ function RayDiagram({ sc, r }) {
 
 // ---------------- 小组件 ----------------
 function Cell({ v, tone, strong, mono }) {
+  const { lang } = React.useContext(LangContext);
+  const mapped = displayVal(v, lang);
   const col = tone === "bad" ? C.fail : tone === "ok" ? C.pass : tone === "warn" ? C.warn : C.ink;
-  return <td style={{ textAlign: "center", padding: "6px 8px", color: col, fontWeight: strong ? 800 : 500, fontFamily: mono ? MONO : SANS, fontSize: mono ? 11.5 : 12.5, whiteSpace: "nowrap" }}>{v}</td>;
+  return <td style={{ textAlign: "center", padding: "6px 8px", color: col, fontWeight: strong ? 800 : 500, fontFamily: mono ? MONO : SANS, fontSize: mono ? 11.5 : 12.5, whiteSpace: "nowrap" }}>{mapped}</td>;
 }
 function Verdict({ v }) {
   const { t } = React.useContext(LangContext);
