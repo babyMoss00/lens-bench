@@ -1,4 +1,4 @@
-const { useState, useMemo } = React;
+const { useState, useMemo, useRef, useEffect } = React;
 
 /* ============================================================
    通用镜头 / 传感器选型计算器  ·  Lens & Sensor Selection Bench
@@ -170,6 +170,14 @@ const I18N = {
     provider_custom: "自定义（OpenAI 兼容）",
     clear_key: "清除 Key",
     clear_key_confirm: "已清除 API Key 和本地配置",
+    ai_chat_title: "AI 选型顾问",
+    ai_chat_sub: "基于当前页面参数、传感器对比和上传文档，智能推荐型号与供应商",
+    ai_chat_placeholder: "例如：根据我的需求，推荐 3 款最适合的传感器型号和配套镜头焦距...",
+    ai_chat_send: "发送",
+    ai_chat_sending: "思考中...",
+    ai_chat_clear: "清空对话",
+    ai_chat_tips: "提示：AI 会读取当前页面的场景参数、传感器对比结果和已上传的 datasheet 作为上下文。问题越具体，推荐越精准。",
+    ai_chat_system: "你是一位机器视觉镜头与传感器选型专家。基于以下项目上下文，回答用户问题。请给出具体型号推荐和焦距建议，并简要说明理由。保持简洁专业。",
     remember_key: "记住 API Key（关闭浏览器后保留）",
     lang_switch: "English",
     lib_tip: "Library contains common typical values; editable after adding",
@@ -325,6 +333,14 @@ const I18N = {
     provider_custom: "Custom (OpenAI Compatible)",
     clear_key: "Clear Key",
     clear_key_confirm: "API Key and local config cleared",
+    ai_chat_title: "AI Selection Advisor",
+    ai_chat_sub: "Intelligent recommendations based on current parameters, sensor comparison & uploaded docs",
+    ai_chat_placeholder: "e.g. Recommend 3 best sensor models and matching lens focal lengths for my requirements...",
+    ai_chat_send: "Send",
+    ai_chat_sending: "Thinking...",
+    ai_chat_clear: "Clear Chat",
+    ai_chat_tips: "Tip: AI reads current scenario parameters, sensor comparison results and uploaded datasheets as context. More specific questions yield better recommendations.",
+    ai_chat_system: "You are a machine vision lens & sensor selection expert. Based on the following project context, answer the user's question. Give specific model recommendations and focal length suggestions with brief reasoning. Be concise and professional.",
     remember_key: "Remember API Key (persist after closing browser)",
     lang_switch: "中文",
     lib_tip: "Library contains common typical values; editable after adding",
@@ -1294,6 +1310,140 @@ function RayDiagram({ sc, r }) {
         <text x={apex} y={H - 6} fontSize="10" fill={C.tealDk} fontFamily={MONO} textAnchor="middle">{t("lens")}{f}</text>
       </svg>
       <div style={{ fontSize: 10.5, color: C.sub }}>{t("ray_tip")}</div>
+    </div>
+  );
+}
+
+
+// ---------------- AI 选型顾问（RAG 问答）----------------
+function AIChat({ sc, rows, sel }) {
+  const { t, lang } = React.useContext(LangContext);
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const bottomRef = useRef(null);
+
+  useEffect(() => { if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" }); }, [messages, open]);
+
+  const buildContext = () => {
+    const parts = [];
+    // 场景参数
+    parts.push(`[Scenario] Target: ${sc.tgtL}×${sc.tgtW}mm; WD: ${sc.wdMin}-${sc.wdMax}mm (nominal ${sc.wdNom}); Margin: ${sc.margin}%; Min feature: ${sc.feat}mm; Req pixels: ${sc.reqW}×${sc.reqH}; λ: ${sc.lambda}nm; F#: ${sc.fnum}; Orientation: ${sc.orient || "auto"}.`);
+    // 通用选型范围
+    const range = computeRange(sc);
+    if (range) {
+      parts.push(`[General Range] Obj res ≤ ${range.objRes ? f1(range.objRes) + 'µm/px' : 'N/A'}; Sensor ≥ ${range.sResLong ? range.sResLong + '×' + range.sResShort : 'N/A'}; FL ≈ ${f1(range.fMin)}-${f1(range.fMax)}mm.`);
+    }
+    // 传感器对比结果
+    const sensorSummary = rows.map(({ s, r }) => {
+      if (!r.valid) return `${s.name}(${s.vendor}): invalid params`;
+      return `${s.name}(${s.vendor}) ${s.px}µm ${s.resW}×${s.resH} ${s.shutter || ''} ${s.mono || ''} → Rec FL=${r.fRec}mm margin=${(r.worstMargin * 100).toFixed(1)}% targetPx=${Math.round(r.tpxLong)}×${Math.round(r.tpxShort)} objRes=${f1(r.sampNom)}µm/px DOF=${r.dofTotal === Infinity ? '∞' : Math.round(r.dofTotal)}mm verdict=${r.verdict}${r.flags.length ? ' flags:' + r.flags.join(',') : ''}`;
+    }).join(' | ');
+    parts.push(`[Sensors Compared] ${sensorSummary}`);
+    // 当前选中
+    if (sel && sel.r && sel.r.valid) {
+      parts.push(`[Selected] ${sel.s.name}: best FL=${sel.r.fRec}mm, AFOV=${f1(sel.r.afovD)}°, β=${sel.r.beta.toFixed(4)}.`);
+    }
+    return parts.join('\n');
+  };
+
+  const send = async () => {
+    if (!input.trim() || busy) return;
+    const userMsg = input.trim();
+    setInput("");
+    setMessages((p) => [...p, { role: "user", text: userMsg }]);
+    setBusy(true);
+    try {
+      const ctx = buildContext();
+      const system = t("ai_chat_system");
+      const instruction = `${system}\n\nContext (current page data):\n${ctx}\n\nUser question: ${userMsg}\n\nPlease answer in ${lang === 'zh' ? 'Chinese' : 'English'}.`;
+      const text = await callLLM(instruction, []);
+      setMessages((p) => [...p, { role: "assistant", text: text || "No response" }]);
+    } catch (e) {
+      setMessages((p) => [...p, { role: "assistant", text: "Error: " + ((e && e.message) || "unknown") }]);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const clearChat = () => setMessages([]);
+
+  if (!open) {
+    return (
+      <div style={{ ...panel, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => setOpen(true)}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 18 }}>🤖</span>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.tealDk }}>{t("ai_chat_title")}</div>
+            <div style={{ fontSize: 11, color: C.sub }}>{t("ai_chat_sub")}</div>
+          </div>
+        </div>
+        <span style={{ fontSize: 12, color: C.teal }}>▶ {t("ai_chat_send")}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ ...panel, padding: 0, overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderBottom: `1px solid ${C.line}`, background: C.chip, cursor: "pointer" }} onClick={() => setOpen(false)}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 18 }}>🤖</span>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.tealDk }}>{t("ai_chat_title")}</div>
+            <div style={{ fontSize: 11, color: C.sub }}>{t("ai_chat_sub")}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button onClick={(e) => { e.stopPropagation(); clearChat(); }} style={{ ...miniBtn, fontSize: 11 }}>{t("ai_chat_clear")}</button>
+          <span style={{ fontSize: 12, color: C.teal }}>▼</span>
+        </div>
+      </div>
+      <div style={{ padding: "10px 14px", fontSize: 11, color: C.sub, background: "#FAFAF8" }}>{t("ai_chat_tips")}</div>
+      <div style={{ maxHeight: 320, overflowY: "auto", padding: "10px 14px", background: "#fff" }}>
+        {messages.length === 0 && (
+          <div style={{ fontSize: 12, color: C.sub, textAlign: "center", padding: "20px 0" }}>
+            {lang === 'zh' ? '👋 你好！我可以根据当前页面的选型参数帮你推荐传感器和镜头。请直接提问。' : '👋 Hello! I can recommend sensors and lenses based on current selection parameters. Ask me anything.'}
+          </div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom: 10 }}>
+            <div style={{
+              maxWidth: "85%",
+              padding: "8px 12px",
+              borderRadius: m.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+              background: m.role === "user" ? C.teal : "#F0F2F5",
+              color: m.role === "user" ? "#fff" : C.ink,
+              fontSize: 12.5,
+              lineHeight: 1.55,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}>
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {busy && (
+          <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 10 }}>
+            <div style={{ padding: "8px 12px", borderRadius: "12px 12px 12px 2px", background: "#F0F2F5", color: C.sub, fontSize: 12 }}>
+              {t("ai_chat_sending")} <span style={{ animation: "pulse 1s infinite" }}>●●●</span>
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+      <div style={{ display: "flex", gap: 8, padding: "10px 14px", borderTop: `1px solid ${C.line}`, background: C.paper }}>
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+          placeholder={t("ai_chat_placeholder")}
+          style={{ flex: 1, minHeight: 36, maxHeight: 80, fontSize: 12.5, padding: "6px 10px", border: `1px solid ${C.lineHard}`, borderRadius: 6, resize: "vertical", fontFamily: SANS, color: C.ink }}
+        />
+        <button onClick={send} disabled={busy || !input.trim()} style={{ ...btn(C.teal), opacity: busy || !input.trim() ? 0.5 : 1, alignSelf: "flex-end" }}>
+          {t("ai_chat_send")}
+        </button>
+      </div>
     </div>
   );
 }
