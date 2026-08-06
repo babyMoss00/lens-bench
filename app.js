@@ -378,7 +378,7 @@ VAL_MAP.zh["DOF_Insufficient"] = "景深略欠";
 function displayVal(v, lang) {
   if (v == null || v === "") return v;
   const s = String(v);
-  return VAL_MAP[lang]?.[s] || s;
+  return (VAL_MAP[lang] && VAL_MAP[lang][s]) || s;
 }
 
 // ==================== /国际化字典 ====================
@@ -519,7 +519,7 @@ function compute(sc, s) {
   const limAxis = fCoverLong <= fCoverShort ? "Long-axis" : "Short-axis";
 
   // 推荐标准 M12：不超过 fBind 的最大标准值（越大→目标越充满→像素越多，同时仍保证覆盖）
-  const fRec = [...STD_M12].reverse().find((f) => f <= fBind) ?? STD_M12[0];
+  const fRec = [...STD_M12].reverse().find((f) => f <= fBind) || STD_M12[0];
   const covered = fRec <= fBind + 1e-9;
 
   const fov = (sAxis, WD, f) => (sAxis * (WD - f)) / f;
@@ -872,8 +872,8 @@ function ScenarioBar({ sc, set, setSc }) {
     keys.forEach((k) => { if (o[k] != null && o[k] !== "" && isFinite(+o[k])) patch[k] = +o[k]; });
     if (Object.keys(patch).length) setSc((p) => ({ ...p, ...patch }));
     const parts = [];
-    if (patch.tgtL || patch.tgtW) parts.push("Target " + (patch.tgtL ?? sc.tgtL) + "×" + (patch.tgtW ?? sc.tgtW));
-    if (patch.wdMin) parts.push("WD " + patch.wdMin + "–" + (patch.wdMax ?? "?"));
+    if (patch.tgtL || patch.tgtW) parts.push("Target " + (patch.tgtL != null ? patch.tgtL : sc.tgtL) + "×" + (patch.tgtW != null ? patch.tgtW : sc.tgtW));
+    if (patch.wdMin) parts.push("WD " + patch.wdMin + "–" + (patch.wdMax != null ? patch.wdMax : "?"));
     if (patch.lambda) parts.push(patch.lambda + "nm");
     if (patch.reqW) parts.push("Req " + patch.reqW + "×" + patch.reqH);
     setRmsg((label || "Parsed") + " → filled scenario: " + (parts.join(" · ") || "(partial fields)") + (o.notes ? " · Notes: " + o.notes : "") + " —— Please verify");
@@ -1431,7 +1431,7 @@ function AIChat({ sc, rows, sel }) {
             </div>
           </div>
         )}
-        <div ref={bottomRef} />
+        <div ref={bottomRef}></div>
       </div>
       <div style={{ display: "flex", gap: 8, padding: "10px 14px", borderTop: `1px solid ${C.line}`, background: C.paper }}>
         <textarea
@@ -1490,7 +1490,7 @@ function Field({ label, hint, children }) {
   );
 }
 function NumIn({ v, set }) {
-  return <input type="number" value={v ?? ""} onChange={(e) => set(e.target.value)}
+  return <input type="number" value={v != null ? v : ""} onChange={(e) => set(e.target.value)}
     style={{ width: 62, fontFamily: MONO, fontSize: 13, padding: "4px 6px", border: `1px solid ${C.lineHard}`, borderRadius: 4, textAlign: "right", background: "#fff", color: C.ink }} />;
 }
 function BigReadout({ label, value, unit, sub }) {
