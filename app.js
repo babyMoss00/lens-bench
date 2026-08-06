@@ -757,7 +757,7 @@ function Header({ onExport, onSettings }) {
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.3, display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "0 10px" }}>
           <span style={{ whiteSpace: "nowrap" }}>{t('title')}</span>
-          <span style={{ fontFamily: MONO, fontSize: 12, color: C.tealDk, fontWeight: 600, whiteSpace: "nowrap" }}>{t('subtitle')}</span>
+          {lang === 'zh' && <span style={{ fontFamily: MONO, fontSize: 12, color: C.tealDk, fontWeight: 600, whiteSpace: "nowrap" }}>{t('subtitle')}</span>}
         </div>
         <div style={{ fontSize: 12.5, color: C.sub, marginTop: 3 }}>
           {t('desc')}
