@@ -163,6 +163,14 @@ const I18N = {
     percent: "%",
     yes: "是",
     no: "否",
+    provider_kimi: "Kimi / Moonshot",
+    provider_openai: "OpenAI",
+    provider_qwen: "通义千问（兼容）",
+    provider_claude: "Claude（Anthropic）",
+    provider_custom: "自定义（OpenAI 兼容）",
+    clear_key: "清除 Key",
+    clear_key_confirm: "已清除 API Key 和本地配置",
+    remember_key: "记住 API Key（关闭浏览器后保留）",
     lang_switch: "English",
     lib_tip: "Library contains common typical values; editable after adding",
     sensor: "Sensor",
@@ -310,6 +318,14 @@ const I18N = {
     percent: "%",
     yes: "Yes",
     no: "No",
+    provider_kimi: "Kimi / Moonshot",
+    provider_openai: "OpenAI",
+    provider_qwen: "Tongyi Qwen (Compatible)",
+    provider_claude: "Claude (Anthropic)",
+    provider_custom: "Custom (OpenAI Compatible)",
+    clear_key: "Clear Key",
+    clear_key_confirm: "API Key and local config cleared",
+    remember_key: "Remember API Key (persist after closing browser)",
     lang_switch: "中文",
     lib_tip: "Library contains common typical values; editable after adding",
     sensor: "Sensor",
@@ -355,15 +371,45 @@ const STD_M12 = [1.8, 2.1, 2.5, 2.8, 3.0, 3.6, 4, 4.3, 4.5, 5, 5.5, 6, 8, 10, 12
 
 // ---------------- 模型配置 + 本地代理调用（独立部署版）----------------
 const CFG_KEY = "lenscfg.v1";
+const CFG_KEY_SESSION = "lenscfg.v1.session";
+const REMEMBER_KEY = "lenscfg.remember";
 const PROVIDERS = {
-  kimi: { label: "Kimi / Moonshot", baseUrl: "https://api.moonshot.cn/v1", model: "moonshot-v1-8k-vision-preview", kind: "openai" },
-  openai: { label: "OpenAI", baseUrl: "https://api.openai.com/v1", model: "gpt-4o-mini", kind: "openai" },
-  qwen: { label: "通义千问（兼容）", baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1", model: "qwen-vl-plus", kind: "openai" },
-  claude: { label: "Claude（Anthropic）", baseUrl: "https://api.anthropic.com", model: "claude-sonnet-4-6", kind: "anthropic" },
-  custom: { label: "自定义（OpenAI 兼容）", baseUrl: "", model: "", kind: "openai" },
+  kimi: { labelKey: "kimi", baseUrl: "https://api.moonshot.cn/v1", model: "moonshot-v1-8k-vision-preview", kind: "openai" },
+  openai: { labelKey: "openai", baseUrl: "https://api.openai.com/v1", model: "gpt-4o-mini", kind: "openai" },
+  qwen: { labelKey: "qwen", baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1", model: "qwen-vl-plus", kind: "openai" },
+  claude: { labelKey: "claude", baseUrl: "https://api.anthropic.com", model: "claude-sonnet-4-6", kind: "anthropic" },
+  custom: { labelKey: "custom", baseUrl: "", model: "", kind: "openai" },
 };
-function getCfg() { try { return JSON.parse(localStorage.getItem(CFG_KEY) || "{}"); } catch (e) { return {}; } }
-function saveCfg(c) { try { localStorage.setItem(CFG_KEY, JSON.stringify(c)); } catch (e) {} }
+function getCfg() {
+  try {
+    const remember = localStorage.getItem(REMEMBER_KEY);
+    // 兼容旧版：如果 localStorage 有配置且用户从未设置过偏好，默认记住（避免老用户 Key 丢失）
+    if (remember === null && localStorage.getItem(CFG_KEY)) {
+      localStorage.setItem(REMEMBER_KEY, "true");
+      return JSON.parse(localStorage.getItem(CFG_KEY) || "{}");
+    }
+    if (remember === "true") {
+      return JSON.parse(localStorage.getItem(CFG_KEY) || "{}");
+    } else {
+      return JSON.parse(sessionStorage.getItem(CFG_KEY_SESSION) || "{}");
+    }
+  } catch (e) { return {}; }
+}
+function saveCfg(c, remember) {
+  try {
+    if (remember) {
+      localStorage.setItem(CFG_KEY, JSON.stringify(c));
+      localStorage.setItem(REMEMBER_KEY, "true");
+      sessionStorage.removeItem(CFG_KEY_SESSION); // 清除临时存储避免残留
+    } else {
+      sessionStorage.setItem(CFG_KEY_SESSION, JSON.stringify(c));
+      localStorage.setItem(REMEMBER_KEY, "false");
+      // 清除 localStorage 中的 Key 确保安全
+      const old = JSON.parse(localStorage.getItem(CFG_KEY) || "{}");
+      if (old.apiKey) { delete old.apiKey; localStorage.setItem(CFG_KEY, JSON.stringify(old)); }
+    }
+  } catch (e) {}
+}
 async function pdfToImages(file, maxPages = 3) {
   if (typeof pdfjsLib === "undefined") throw new Error("PDF component not loaded, please upload image instead");
   const buf = await file.arrayBuffer();
@@ -720,6 +766,9 @@ function Settings({ open, onClose }) {
     const g = getCfg();
     return { preset: g.preset || "kimi", provider: g.provider || "openai", baseUrl: g.baseUrl || PROVIDERS.kimi.baseUrl, model: g.model || PROVIDERS.kimi.model, apiKey: g.apiKey || "" };
   });
+  const [remember, setRemember] = useState(() => {
+    try { return localStorage.getItem(REMEMBER_KEY) === "true"; } catch (e) { return false; }
+  });
   if (!open) return null;
   const pickPreset = (k) => { const p = PROVIDERS[k]; setC((s) => ({ ...s, preset: k, provider: p.kind === "anthropic" ? "anthropic" : "openai", baseUrl: p.baseUrl || s.baseUrl, model: p.model || s.model })); };
   return (
@@ -729,16 +778,33 @@ function Settings({ open, onClose }) {
         <div style={{ fontSize: 11.5, color: C.sub, marginBottom: 12, lineHeight: 1.5 }}>{t("settings_desc")}</div>
         <SetRow label={t("provider")}>
           <select value={c.preset} onChange={(e) => pickPreset(e.target.value)} style={setInp}>
-            {Object.keys(PROVIDERS).map((k) => <option key={k} value={k}>{PROVIDERS[k].label}</option>)}
+            {Object.keys(PROVIDERS).map((k) => <option key={k} value={k}>{t("provider_" + PROVIDERS[k].labelKey)}</option>)}
           </select>
         </SetRow>
         <SetRow label={t("base_url")}><input value={c.baseUrl} onChange={(e) => setC((s) => ({ ...s, baseUrl: e.target.value }))} style={setInp} placeholder="https://api.moonshot.cn/v1" /></SetRow>
         <SetRow label={t("model_name")}><input value={c.model} onChange={(e) => setC((s) => ({ ...s, model: e.target.value }))} style={setInp} placeholder="moonshot-v1-8k-vision-preview" /></SetRow>
         <SetRow label={t("api_key")}><input type="password" value={c.apiKey} onChange={(e) => setC((s) => ({ ...s, apiKey: e.target.value }))} style={setInp} placeholder="sk-..." /></SetRow>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, marginTop: -4 }}>
+          <input type="checkbox" id="rememberKey" checked={remember} onChange={(e) => setRemember(e.target.checked)} style={{ cursor: "pointer" }} />
+          <label htmlFor="rememberKey" style={{ fontSize: 12, color: C.sub, cursor: "pointer" }}>{t("remember_key")}</label>
+        </div>
         <div style={{ fontSize: 11, color: C.sub, marginTop: 6 }}>{t("current_mode")}: {c.provider === "anthropic" ? "Anthropic Protocol" : "OpenAI Compatible Protocol"}</div>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 14 }}>
-          <button onClick={onClose} style={btn(C.sub, true)}>{t("cancel")}</button>
-          <button onClick={() => { saveCfg(c); onClose(); }} style={btn(C.teal)}>{t("save")}</button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
+          <button onClick={() => {
+            try {
+              localStorage.removeItem(CFG_KEY);
+              localStorage.removeItem(CFG_KEY_SESSION);
+              localStorage.removeItem(REMEMBER_KEY);
+              sessionStorage.removeItem(CFG_KEY_SESSION);
+              setC((s) => ({ ...s, apiKey: "" }));
+              setRemember(false);
+              alert(t("clear_key_confirm"));
+            } catch (e) {}
+          }} style={{ ...btn(C.fail, true), fontSize: 11, padding: "5px 10px" }}>{t("clear_key")}</button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={onClose} style={btn(C.sub, true)}>{t("cancel")}</button>
+            <button onClick={() => { saveCfg(c, remember); onClose(); }} style={btn(C.teal)}>{t("save")}</button>
+          </div>
         </div>
       </div>
     </div>
