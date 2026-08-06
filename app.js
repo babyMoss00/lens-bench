@@ -164,7 +164,7 @@ const I18N = {
     yes: "是",
     no: "否",
     lang_switch: "English",
-    lib_tip: "库内为常见典型值，添加后可在表内编辑覆盖",
+    lib_tip: "Library contains common typical values; editable after adding",
     sensor: "Sensor",
     lens: "M12 · f=",
     target: "目标",
@@ -370,17 +370,17 @@ async function callLLM(instruction, files) {
 
 // 传感器库：常见典型值，可在行内编辑覆盖。px=像元(µm)，resW/resH=有效像素
 const SENSOR_LIB = [
-  { name: "SC202CS", vendor: "SmartSens", px: 1.75, resW: 1600, resH: 1200, fmt: '1/5.1"', shutter: "卷帘", mono: "黑白/彩色", note: "2MP 低成本，黑白料号 -MSMNN00" },
-  { name: "OV9281", vendor: "OmniVision", px: 3.0, resW: 1280, resH: 800, fmt: '1/4"', shutter: "全局", mono: "黑白", note: "1MP 全局快门，OmniPixel3-GS" },
-  { name: "AR0234", vendor: "onsemi", px: 3.0, resW: 1920, resH: 1200, fmt: '1/2.6"', shutter: "全局", mono: "黑白/彩色", note: "2.3MP 全局快门，机器视觉常用" },
-  { name: "OV2311", vendor: "OmniVision", px: 3.0, resW: 1600, resH: 1300, fmt: '1/2.9"', shutter: "全局", mono: "黑白/RGB-IR", note: "2MP 全局快门" },
-  { name: "AR0144", vendor: "onsemi", px: 3.0, resW: 1280, resH: 800, fmt: '1/4"', shutter: "全局", mono: "黑白/彩色", note: "1MP 全局快门" },
-  { name: "IMX296", vendor: "Sony", px: 3.45, resW: 1456, resH: 1088, fmt: '1/2.9"', shutter: "全局", mono: "黑白/彩色", note: "1.58MP 全局，Pregius" },
-  { name: "IMX287", vendor: "Sony", px: 6.9, resW: 728, resH: 544, fmt: '1/2.9"', shutter: "全局", mono: "黑白/彩色", note: "0.4MP 大像元，高灵敏" },
-  { name: "OV5647", vendor: "OmniVision", px: 1.4, resW: 2592, resH: 1944, fmt: '1/4"', shutter: "卷帘", mono: "彩色", note: "5MP 卷帘 (树莓派 v1)" },
-  { name: "IMX219", vendor: "Sony", px: 1.12, resW: 3280, resH: 2464, fmt: '1/4"', shutter: "卷帘", mono: "彩色", note: "8MP 卷帘 (树莓派 v2)" },
-  { name: "IMX477", vendor: "Sony", px: 1.55, resW: 4056, resH: 3040, fmt: '1/2.3"', shutter: "卷帘", mono: "彩色", note: "12MP 卷帘 (树莓派 HQ)" },
-  { name: "MT9V034", vendor: "onsemi", px: 6.0, resW: 752, resH: 480, fmt: '1/3"', shutter: "全局", mono: "黑白/彩色", note: "WVGA 全局，经典机器人视觉" },
+  { name: "SC202CS", vendor: "SmartSens", px: 1.75, resW: 1600, resH: 1200, fmt: '1/5.1"', shutter: "Rolling", mono: "Mono/Color", note: "2MP low-cost, mono PN -MSMNN00" },
+  { name: "OV9281", vendor: "OmniVision", px: 3.0, resW: 1280, resH: 800, fmt: '1/4"', shutter: "Global", mono: "Mono", note: "1MP Global Shutter, OmniPixel3-GS" },
+  { name: "AR0234", vendor: "onsemi", px: 3.0, resW: 1920, resH: 1200, fmt: '1/2.6"', shutter: "Global", mono: "Mono/Color", note: "2.3MP Global Shutter, MV common" },
+  { name: "OV2311", vendor: "OmniVision", px: 3.0, resW: 1600, resH: 1300, fmt: '1/2.9"', shutter: "Global", mono: "Mono/RGB-IR", note: "2MP Global Shutter" },
+  { name: "AR0144", vendor: "onsemi", px: 3.0, resW: 1280, resH: 800, fmt: '1/4"', shutter: "Global", mono: "Mono/Color", note: "1MP Global Shutter" },
+  { name: "IMX296", vendor: "Sony", px: 3.45, resW: 1456, resH: 1088, fmt: '1/2.9"', shutter: "Global", mono: "Mono/Color", note: "1.58MP Global, Pregius" },
+  { name: "IMX287", vendor: "Sony", px: 6.9, resW: 728, resH: 544, fmt: '1/2.9"', shutter: "Global", mono: "Mono/Color", note: "0.4MP large pixel, high sensitivity" },
+  { name: "OV5647", vendor: "OmniVision", px: 1.4, resW: 2592, resH: 1944, fmt: '1/4"', shutter: "Rolling", mono: "Color", note: "5MP Rolling (Raspberry Pi v1)" },
+  { name: "IMX219", vendor: "Sony", px: 1.12, resW: 3280, resH: 2464, fmt: '1/4"', shutter: "Rolling", mono: "Color", note: "8MP Rolling (Raspberry Pi v2)" },
+  { name: "IMX477", vendor: "Sony", px: 1.55, resW: 4056, resH: 3040, fmt: '1/2.3"', shutter: "Rolling", mono: "Color", note: "12MP Rolling (Raspberry Pi HQ)" },
+  { name: "MT9V034", vendor: "onsemi", px: 6.0, resW: 752, resH: 480, fmt: '1/3"', shutter: "Global", mono: "Mono/Color", note: "WVGA Global, classic robotics vision" },
 ];
 
 // 常见光学格式对角 (仅供换算参考，实际以像元×分辨率为准)
@@ -394,8 +394,8 @@ let UID = 100;
 const uid = () => ++UID;
 
 function mkSensor(lib) {
-  const b = lib || { name: "自定义", vendor: "", px: 3.0, resW: 1280, resH: 800, fmt: "", shutter: "", mono: "", note: "" };
-  return { id: uid(), ...b, circle: 0 }; // circle=0 表示未指定像圈
+  const b = lib || { name: "Custom", vendor: "", px: 3.0, resW: 1280, resH: 800, fmt: "", shutter: "", mono: "", note: "" };
+  return { id: uid(), ...b, circle: 0 }; // circle=0 = image circle not specified
 }
 
 // ---------------- 计算内核（纯函数）----------------
@@ -403,7 +403,7 @@ function compute(sc, s) {
   const px = num(s.px), resW = num(s.resW), resH = num(s.resH);
   if (!px || !resW || !resH) return { valid: false };
 
-  const w = (px * resW) / 1000, h = (px * resH) / 1000;        // 传感器物理尺寸 mm
+  const w = (px * resW) / 1000, h = (px * resH) / 1000;        // sensor physical size mm
   const sLong = Math.max(w, h), sShort = Math.min(w, h);
   const resLong = Math.max(resW, resH), resShort = Math.min(resW, resH);
   const diag = Math.hypot(w, h);
@@ -425,7 +425,7 @@ function compute(sc, s) {
   const fCoverLong = (sLong * wdMin) / (tForLong * mFac + sLong);
   const fCoverShort = (sShort * wdMin) / (tForShort * mFac + sShort);
   const fBind = Math.min(fCoverLong, fCoverShort);
-  const limAxis = fCoverLong <= fCoverShort ? "长轴" : "短轴";
+  const limAxis = fCoverLong <= fCoverShort ? "Long-axis" : "Short-axis";
 
   // 推荐标准 M12：不超过 fBind 的最大标准值（越大→目标越充满→像素越多，同时仍保证覆盖）
   const fRec = [...STD_M12].reverse().find((f) => f <= fBind) ?? STD_M12[0];
@@ -462,11 +462,11 @@ function compute(sc, s) {
   // 衍射极限 & 景深（选定 F#）
   const lam = num(sc.lambda) / 1000;         // µm
   const fnum = num(sc.fnum);
-  const nDiff = (2 * px) / (2.44 * lam);      // Airy≈2px 时的 F#
+  const nDiff = (2 * px) / (2.44 * lam);      // Airy≈2px F#
   const airy = 2.44 * lam * fnum;            // µm
   const airyPx = airy / px;
 
-  const cocMm = (num(sc.cocPx) * px) / 1000; // 弥散圆 mm
+  const cocMm = (num(sc.cocPx) * px) / 1000; // circle of confusion mm
   const u = wdNom;
   const Hh = (fRec * fRec) / (fnum * cocMm) + fRec;
   const near = (u * (Hh - fRec)) / (Hh + u - 2 * fRec);
@@ -904,7 +904,7 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
     const p = parseDatasheet(text);
     const f = p.found;
     add({
-      name: p.name || "识别·待核对", vendor: p.vendor || "",
+      name: p.name || "Parsed·Verify", vendor: p.vendor || "",
       px: f.px || 3.0, resW: f.resW || 1280, resH: f.resH || 800,
       fmt: f.fmt || "", shutter: f.shutter || "", mono: f.mono || "",
       note: [p.ifc.join("/"), p.note].filter(Boolean).join(" · "),
@@ -936,7 +936,7 @@ function SensorBench({ rows, selId, setSelId, add, dup, rm, edit }) {
       const clean = txt.replace(/```json/gi, "").replace(/```/g, "").trim();
       const j = JSON.parse(clean);
       add({
-        name: j.name || "AI识别·待核对", vendor: j.vendor || "",
+        name: j.name || "AI-Parsed·Verify", vendor: j.vendor || "",
         px: j.px || 3.0, resW: j.resW || 1280, resH: j.resH || 800,
         fmt: j.fmt || "", shutter: j.shutter || "", mono: j.mono || "",
         note: [j.interface, j.fps ? "≤" + j.fps + "fps" : ""].filter(Boolean).join(" · "),
