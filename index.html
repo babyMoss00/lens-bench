@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>镜头 / 传感器选型计算台</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='6' fill='none' stroke='%230F7C8A' stroke-width='1.6'/><circle cx='8' cy='8' r='2' fill='%230F7C8A'/></svg>" />
+  <style>
+    html, body { margin: 0; padding: 0; background: #FBFAF7; }
+    * { -webkit-font-smoothing: antialiased; }
+    #boot { font-family: system-ui, 'PingFang SC', 'Microsoft YaHei'; color: #5A6B7E; padding: 40px; text-align: center; }
+  </style>
+  <!-- React + Babel（浏览器内转译 JSX，无需构建）-->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.8.7/babel.min.js"></script>
+  <!-- pdf.js：把 PDF 转成图片再送模型识别 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  </script>
+</head>
+<body>
+  <div id="root"><div id="boot">正在加载…（首次打开需联网加载组件，约 1–2 秒）</div></div>
+  <!-- 应用主体（JSX，由 Babel 现场转译）-->
+  <script type="text/babel" data-presets="react" src="/app.js"></script>
+</body>
+</html>

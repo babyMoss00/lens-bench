@@ -1,0 +1,17 @@
+{
+  "name": "lens-bench",
+  "version": "1.0.0",
+  "description": "镜头/传感器选型计算台 - 云部署版",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["lens", "sensor", "machine-vision", "calculator"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {}
+}
