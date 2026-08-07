@@ -120,4 +120,4 @@ A: 注册 [UptimeRobot](https://uptimerobot.com)，每 5–10 分钟 ping 一次
 
 ## License
 
-MIT
+Apache License 2.0
