@@ -120,4 +120,4 @@ A: [UptimeRobot](https://uptimerobot.com) に登録し、5–10 分ごとに URL
 
 ## License
 
-MIT
+Apache License 2.0
