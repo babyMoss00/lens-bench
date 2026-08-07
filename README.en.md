@@ -120,4 +120,4 @@ A: Sign up at [UptimeRobot](https://uptimerobot.com) and ping your URL every 5â€
 
 ## License
 
-MIT
+Apache License 2.0
