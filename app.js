@@ -837,8 +837,9 @@ const setInp = { width: "100%", boxSizing: "border-box", fontSize: 13, padding: 
 function Header({ onExport, onSettings }) {
   const { t, lang, setLang } = React.useContext(LangContext);
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14, borderBottom: `2px solid ${C.ink}`, paddingBottom: 10, flexWrap: "wrap", gap: 10 }}>
-      <div style={{ minWidth: 0, flex: 1 }}>
+    <div style={{ marginBottom: 14, borderBottom: `2px solid ${C.ink}`, paddingBottom: 10 }}>
+      {/* 第一行：标题 + 副标题 */}
+      <div>
         <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.3, display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "0 10px" }}>
           <span style={{ whiteSpace: "nowrap" }}>{t('title')}</span>
           {lang === 'zh' && <span style={{ fontFamily: MONO, fontSize: 12, color: C.tealDk, fontWeight: 600, whiteSpace: "nowrap" }}>{t('subtitle')}</span>}
@@ -847,10 +848,14 @@ function Header({ onExport, onSettings }) {
           {t('desc')}
         </div>
       </div>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginLeft: "auto" }}>
-        <span style={{ fontFamily: MONO, fontSize: 11, color: C.pass, background: C.passBg, border: `1px solid ${C.pass}33`, borderRadius: 4, padding: "3px 8px" }} className="hide-mobile">
+      {/* 第二行：badge */}
+      <div style={{ marginTop: 6, marginBottom: 6 }}>
+        <span style={{ fontFamily: MONO, fontSize: 11, color: C.pass, background: C.passBg, border: `1px solid ${C.pass}33`, borderRadius: 4, padding: "3px 8px" }}>
           ● {t('badge')}
         </span>
+      </div>
+      {/* 第三行：按钮靠右 */}
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')} style={btn(C.sub, true)}>{t('lang_switch')}</button>
         <button onClick={onSettings} style={btn(C.tealDk)}>{t('settings')}</button>
         <button onClick={onExport} style={btn(C.teal)}>{t('export_csv')}</button>
